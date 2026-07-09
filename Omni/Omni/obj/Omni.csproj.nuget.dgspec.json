@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "E:\\omni\\Omni\\Omni\\Omni.csproj": {}
+    "E:\\Sheridan\\Programs\\Capstone\\New folder\\Omni\\Omni\\Omni.csproj": {}
   },
   "projects": {
-    "E:\\omni\\Omni\\Omni\\Omni.csproj": {
+    "E:\\Sheridan\\Programs\\Capstone\\New folder\\Omni\\Omni\\Omni.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\omni\\Omni\\Omni\\Omni.csproj",
+        "projectUniqueName": "E:\\Sheridan\\Programs\\Capstone\\New folder\\Omni\\Omni\\Omni.csproj",
         "projectName": "Omni",
-        "projectPath": "E:\\omni\\Omni\\Omni\\Omni.csproj",
-        "packagesPath": "C:\\Users\\thecr\\.nuget\\packages\\",
-        "outputPath": "E:\\omni\\Omni\\Omni\\obj\\",
+        "projectPath": "E:\\Sheridan\\Programs\\Capstone\\New folder\\Omni\\Omni\\Omni.csproj",
+        "packagesPath": "C:\\Users\\nikol\\.nuget\\packages\\",
+        "outputPath": "E:\\Sheridan\\Programs\\Capstone\\New folder\\Omni\\Omni\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "E:\\vsr\\NuGetPackages"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\thecr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nikol\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],

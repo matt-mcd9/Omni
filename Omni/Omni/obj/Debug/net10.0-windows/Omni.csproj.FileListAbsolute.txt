@@ -32,3 +32,38 @@ E:\omni\Omni\Omni\obj\Debug\net10.0-windows\refint\Omni.dll
 E:\omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.pdb
 E:\omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.genruntimeconfig.cache
 E:\omni\Omni\Omni\obj\Debug\net10.0-windows\ref\Omni.dll
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\bin\Debug\net10.0-windows\Omni.exe
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\bin\Debug\net10.0-windows\Omni.deps.json
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\bin\Debug\net10.0-windows\Omni.runtimeconfig.json
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\bin\Debug\net10.0-windows\Omni.dll
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\bin\Debug\net10.0-windows\Omni.pdb
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\MainWindow.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\GamesPage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\HomePage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\MusicPage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\PlaylistsPage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\SettingsPage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\SoftwarePage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\VideosPage.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\App.baml
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\MainWindow.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\GamesPage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\HomePage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\MusicPage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\PlaylistsPage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\SettingsPage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\SoftwarePage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Pages\VideosPage.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\App.g.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni_MarkupCompile.cache
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.g.resources
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.GeneratedMSBuildEditorConfig.editorconfig
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.AssemblyInfoInputs.cache
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.AssemblyInfo.cs
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.csproj.CoreCompileInputs.cache
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.sourcelink.json
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.dll
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\refint\Omni.dll
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.pdb
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.genruntimeconfig.cache
+E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\ref\Omni.dll

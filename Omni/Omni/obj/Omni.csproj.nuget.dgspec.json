@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\Omni.csproj": {}
+    "C:\\Users\\roboa\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {}
   },
   "projects": {
-    "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\Omni.csproj": {
+    "C:\\Users\\roboa\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\Omni.csproj",
+        "projectUniqueName": "C:\\Users\\roboa\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
         "projectName": "Omni",
-        "projectPath": "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\Omni.csproj",
+        "projectPath": "C:\\Users\\roboa\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
         "packagesPath": "C:\\Users\\roboa\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\obj\\",
         "projectStyle": "PackageReference",

@@ -67,3 +67,38 @@ E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\ref
 E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.pdb
 E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\Omni.genruntimeconfig.cache
 E:\Sheridan\Programs\Capstone\New folder\Omni\Omni\obj\Debug\net10.0-windows\ref\Omni.dll
+C:\Users\mcder\source\repos\Omni\Omni\Omni\bin\Debug\net10.0-windows\Omni.exe
+C:\Users\mcder\source\repos\Omni\Omni\Omni\bin\Debug\net10.0-windows\Omni.deps.json
+C:\Users\mcder\source\repos\Omni\Omni\Omni\bin\Debug\net10.0-windows\Omni.runtimeconfig.json
+C:\Users\mcder\source\repos\Omni\Omni\Omni\bin\Debug\net10.0-windows\Omni.dll
+C:\Users\mcder\source\repos\Omni\Omni\Omni\bin\Debug\net10.0-windows\Omni.pdb
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\MainWindow.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\GamesPage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\HomePage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\MusicPage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\PlaylistsPage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\SettingsPage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\SoftwarePage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\VideosPage.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\App.baml
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\MainWindow.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\GamesPage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\HomePage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\MusicPage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\PlaylistsPage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\SettingsPage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\SoftwarePage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Pages\VideosPage.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\App.g.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni_MarkupCompile.cache
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.g.resources
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.AssemblyInfoInputs.cache
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.AssemblyInfo.cs
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.csproj.CoreCompileInputs.cache
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.sourcelink.json
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.dll
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\refint\Omni.dll
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.pdb
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\Omni.genruntimeconfig.cache
+C:\Users\mcder\source\repos\Omni\Omni\Omni\obj\Debug\net10.0-windows\ref\Omni.dll

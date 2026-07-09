@@ -15,6 +15,7 @@ namespace Omni
 
         // ----- Sidebar navigation: swap PageHost content based on which
         // RadioButton became checked ----- test 2 from nik
+        //hey friends from matt
         private void Nav_Checked(object sender, RoutedEventArgs e)
         {
             if (PageHost == null || sender is not RadioButton rb) return;

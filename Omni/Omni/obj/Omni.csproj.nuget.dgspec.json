@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\mcder\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {}
+    "C:\\Users\\thecr\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {}
   },
   "projects": {
-    "C:\\Users\\mcder\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {
+    "C:\\Users\\thecr\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\mcder\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
+        "projectUniqueName": "C:\\Users\\thecr\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
         "projectName": "Omni",
-        "projectPath": "C:\\Users\\mcder\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
-        "packagesPath": "C:\\Users\\mcder\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\mcder\\source\\repos\\Omni\\Omni\\Omni\\obj\\",
+        "projectPath": "C:\\Users\\thecr\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
+        "packagesPath": "C:\\Users\\thecr\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\thecr\\source\\repos\\Omni\\Omni\\Omni\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "E:\\vsr\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\mcder\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\thecr\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -71,7 +71,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

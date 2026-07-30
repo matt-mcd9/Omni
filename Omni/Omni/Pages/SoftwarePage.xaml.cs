@@ -1,49 +1,104 @@
 using Microsoft.Win32;
-using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Shapes;
+using Omni.Data;
+using Omni.Models;
+using Path = System.IO.Path;
 
 namespace Omni.Pages
 {
     public partial class SoftwarePage : UserControl
     {
-        String[] hasExeFiles;
         public SoftwarePage()
         {
             InitializeComponent();
+            Loaded += SoftwarePage_Loaded;
         }
 
-        //click event for launching (find item, match to full path, launch)
-        private void launchApp_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
-            int indexSelectedApp = listApplications.SelectedIndex;
-
-            ProcessStartInfo launchInfo = new ProcessStartInfo {
-                FileName = hasExeFiles[indexSelectedApp],
-                UseShellExecute = true                
-            };
-
-            Process.Start(launchInfo);
-            
-                
+        private async void SoftwarePage_Loaded(object sender, RoutedEventArgs e)
+        {
+            await LoadApplicationAsync();
         }
 
-        private void selectFolder_Click(object sender, EventArgs e) {
-            OpenFolderDialog dialog = new OpenFolderDialog();
-            dialog.ShowDialog();
-            String folderName = dialog.FolderName;
+        private async Task LoadApplicationAsync()
+        {
+            List<MediaItem> applications =
+                await DatabaseService.GetLibraryAsync(
+                    category: "Software"
+                );
 
-            if (Directory.Exists(folderName)) {
-                hasExeFiles = Directory.GetFiles(folderName, "*.lnk");
-                foreach (String file in hasExeFiles) {
-                    String results = System.IO.Path.GetFileNameWithoutExtension(file);
-                    listApplications.Items.Add(results);
+            listApplications.ItemsSource = applications;
+            listApplications.DisplayMemberPath =
+                nameof(MediaItem.Title);
+        }
 
-                }
+        private async void selectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFolderDialog dialog = new();
+            if (dialog.ShowDialog() != true)
+            {
+                return;
             }
+
+            string folderName = dialog.FolderName;
+
+            if (!Directory.Exists(folderName))
+            {
+                MessageBox.Show("The selected folder does not exist.");
+                return;
+            }
+
+            string[] applicationFiles = Directory.GetFiles(folderName,
+                "*.lnk",
+                SearchOption.AllDirectories
+            );
+
+            foreach (string filePath in applicationFiles)
+            {
+                string title =
+                    Path.GetFileNameWithoutExtension(filePath);
+
+                await DatabaseService.AddLibraryItemAsync(
+                    title,
+                    filePath,
+                    "Software",
+                    "Shortcut"
+                );
+
+                await LoadApplicationAsync();
+
+                MessageBox.Show(
+                    $"{applicationFiles.Length} applications were found."
+                );
+            }
+
         }
 
+        private async void launchApp_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (listApplications.SelectedItem is not MediaItem selectedItem)
+            {
+                return;
+            }
+
+            if (!File.Exists(selectedItem.FilePath))
+            {
+                MessageBox.Show("The selected file does not exist.");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = selectedItem.FilePath,
+                UseShellExecute = true
+            });
+
+            await DatabaseService.RecordLaunchAsync(
+                selectedItem.MediaItemId
+            );
+        }
     }
 }

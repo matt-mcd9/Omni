@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "CkawaPWhbuc=",
+  "dgSpecHash": "IdP5TN/xqsA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\roboa\\Source\\Repos\\Omni\\Omni\\Omni\\Omni.csproj",
+  "projectFilePath": "C:\\Users\\roboa\\source\\repos\\Omni\\Omni\\Omni\\Omni.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\roboa\\.nuget\\packages\\libvlcsharp\\3.10.0\\libvlcsharp.3.10.0.nupkg.sha512",
     "C:\\Users\\roboa\\.nuget\\packages\\libvlcsharp.wpf\\3.10.0\\libvlcsharp.wpf.3.10.0.nupkg.sha512",
+    "C:\\Users\\roboa\\.nuget\\packages\\taglibsharp\\2.3.0\\taglibsharp.2.3.0.nupkg.sha512",
     "C:\\Users\\roboa\\.nuget\\packages\\videolan.libvlc.windows\\3.0.23.1\\videolan.libvlc.windows.3.0.23.1.nupkg.sha512"
   ],
   "logs": []

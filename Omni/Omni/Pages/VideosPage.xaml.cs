@@ -14,7 +14,7 @@ namespace Omni.Pages
 
         public VideosPage()
         {
-            InitializeComponent();
+           InitializeComponent();
 
             Loaded += VideosPage_Loaded;
         }

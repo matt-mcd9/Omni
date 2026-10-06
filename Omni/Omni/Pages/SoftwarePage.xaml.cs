@@ -42,8 +42,7 @@ namespace Omni.Pages
             String folderName = dialog.FolderName;
 
             if (Directory.Exists(folderName)) {
-                //hasExeFiles = Directory.GetFiles(folderName, "*.lnk", SearchOption.AllDirectories);
-                //hasExeFiles = Directory.GetFiles(folderName, "*.exe", SearchOption.AllDirectories);
+
                 fileTypes = Directory.GetFiles(folderName, "*", SearchOption.AllDirectories);
 
                 foreach (String file in fileTypes) {

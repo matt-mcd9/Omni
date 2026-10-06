@@ -1,6 +1,116 @@
 <UserControl x:Class="Omni.Pages.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <TextBlock Text="Settings" Foreground="{StaticResource TextBrush}"
-               FontSize="26" FontWeight="Bold"/>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Omni.Controls">
+    <UserControl.Resources>
+
+        <!-- Theme choice tile: a RadioButton whose Tag holds the preview content -->
+        <Style x:Key="ThemeTileStyle" TargetType="RadioButton">
+            <Setter Property="GroupName" Value="ThemeGroup"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Outer"
+                                Background="{DynamicResource SidebarBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="2" CornerRadius="10" Padding="10">
+                            <StackPanel>
+                                <ContentPresenter Content="{TemplateBinding Tag}" Height="70"/>
+                                <ContentPresenter Margin="2,10,0,0" TextElement.FontSize="14"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Outer" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Outer" Property="BorderBrush" Value="#3B82F6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="HintStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="Settings" Foreground="{DynamicResource TextBrush}"
+                       FontSize="26" FontWeight="Bold" Margin="0,0,0,24"/>
+
+            <!-- ===== Appearance ===== -->
+            <TextBlock Text="Appearance" Style="{StaticResource SectionHeaderStyle}"/>
+            <TextBlock Text="Choose the colours for the whole app.(Or create your own~)"
+                       Style="{StaticResource HintStyle}" Margin="0,0,0,14"/>
+
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="DayTheme" Content="Day" Style="{StaticResource ThemeTileStyle}"
+                             Checked="Theme_Checked">
+                    <RadioButton.Tag>
+                        <Border Background="White" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="6">
+                            <TextBlock Text="Aa" Foreground="Black" FontSize="22" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </RadioButton.Tag>
+                </RadioButton>
+
+                <RadioButton x:Name="NightTheme" Content="Night" Style="{StaticResource ThemeTileStyle}"
+                             Checked="Theme_Checked">
+                    <RadioButton.Tag>
+                        <Border Background="#0B0B0B" BorderBrush="#333333" BorderThickness="1" CornerRadius="6">
+                            <TextBlock Text="Aa" Foreground="White" FontSize="22" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </RadioButton.Tag>
+                </RadioButton>
+
+                <RadioButton x:Name="CustomTheme" Content="Custom" Style="{StaticResource ThemeTileStyle}"
+                             Checked="Theme_Checked">
+                    <RadioButton.Tag>
+                        <Border x:Name="CustomTilePreview" BorderBrush="#555555" BorderThickness="1" CornerRadius="6">
+                            <TextBlock x:Name="CustomTileText" Text="Aa" FontSize="22" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </RadioButton.Tag>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- ===== Custom colour picker (only shown for the Custom theme) ===== -->
+            <Border x:Name="CustomPanel" Visibility="Collapsed" Margin="0,20,0,0"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource SidebarBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="18">
+                <WrapPanel>
+                    <StackPanel Margin="0,0,36,0">
+                        <TextBlock Text="Background colour" Style="{StaticResource SectionHeaderStyle}"
+                                   Margin="0,0,0,12"/>
+                        <controls:ColorPicker x:Name="BackgroundPicker" ColorChanged="CustomColor_Changed"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Text colour" Style="{StaticResource SectionHeaderStyle}"
+                                   Margin="0,0,0,12"/>
+                        <controls:ColorPicker x:Name="TextPicker" ColorChanged="CustomColor_Changed"/>
+                    </StackPanel>
+                </WrapPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

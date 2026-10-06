@@ -62,6 +62,16 @@ namespace Omni.Data
             db.SaveChanges();
         }
 
+        // Number of media items per CategoryId
+        public Dictionary<int, int> GetCategoryCounts()
+        {
+            using var db = new OmniDbContext();
+            return db.MediaItems
+                .GroupBy(m => m.CategoryId)
+                .Select(g => new { g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Key, x => x.Count);
+        }
+
         public List<LaunchHistory> GetRecentHistory(int userId, int count = 20)
         {
             using var db = new OmniDbContext();

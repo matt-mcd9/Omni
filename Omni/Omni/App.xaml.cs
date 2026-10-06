@@ -10,6 +10,8 @@ namespace Omni
         {
             base.OnStartup(e);
 
+            ThemeManager.LoadSaved();
+
             using var db = new OmniDbContext();
             db.Database.Migrate();
         }

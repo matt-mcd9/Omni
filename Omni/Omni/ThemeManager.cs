@@ -18,17 +18,32 @@ namespace Omni
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Omni", "theme.txt");
 
-        public static string CurrentTheme { get; private set; } = Dark;
-        public static Color CurrentBackground { get; private set; } = DarkBg;
-        public static Color CurrentText { get; private set; } = Colors.White;
+        // Below this WCAG contrast ratio, text is shown in black or white instead
+        // so a custom theme can never make the app unreadable
+        private const double MinContrast = 3.0;
 
-        public static bool IsCustom(string theme) => theme != Dark && theme != Light;
+        // File contents as last read or written, to skip writes when nothing changed
+        private static string? _savedContent;
+
+        public static string CurrentTheme { get; private set; } = Dark;
+
+        // The most recent custom colours, remembered while a preset is active
+        public static (Color Background, Color Text)? LastCustom { get; private set; }
 
         public static string Custom(Color background, Color text) => $"{ToHex(background)},{ToHex(text)}";
 
-        // Readable default text colour for a background
+        // Black or white, whichever is easier to read on this background
         public static Color ContrastText(Color background) =>
-            IsLight(background) ? Colors.Black : Colors.White;
+            ContrastRatio(background, Colors.Black) >= ContrastRatio(background, Colors.White)
+                ? Colors.Black
+                : Colors.White;
+
+        public static bool IsReadable(Color background, Color text) =>
+            ContrastRatio(background, text) >= MinContrast;
+
+        // The text colour actually shown for a background and a chosen text colour
+        public static Color ReadableText(Color background, Color text) =>
+            IsReadable(background, text) ? text : ContrastText(background);
 
         public static void LoadSaved()
         {
@@ -36,12 +51,19 @@ namespace Omni
             try
             {
                 if (File.Exists(SettingsPath))
-                    theme = File.ReadAllText(SettingsPath).Trim();
+                {
+                    // Line 1: the active theme. Line 2: the last custom colours
+                    var lines = File.ReadAllLines(SettingsPath);
+                    if (lines.Length > 0) theme = lines[0].Trim();
+                    if (lines.Length > 1 && TryParseCustom(lines[1], out var bg, out var text))
+                        LastCustom = (bg, text);
+                }
             }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
 
             Apply(theme, save: false);
+            _savedContent = SettingsContent();
         }
 
         public static void Apply(string theme, bool save = true)
@@ -49,16 +71,39 @@ namespace Omni
             Color bg, text;
             if (theme == Light) (bg, text) = (LightBg, Colors.Black);
             else if (theme == Dark) (bg, text) = (DarkBg, Colors.White);
-            else if (TryParseCustom(theme, out bg, out text)) theme = Custom(bg, text);
+            else if (TryParseCustom(theme, out bg, out text))
+            {
+                theme = Custom(bg, text);
+                LastCustom = (bg, text);
+            }
             else (theme, bg, text) = (Dark, DarkBg, Colors.White);
 
-            ApplyColors(bg, text);
+            ApplyColors(bg, ReadableText(bg, text));
             CurrentTheme = theme;
-            CurrentBackground = bg;
-            CurrentText = text;
 
-            if (save) Save(theme);
+            if (save) SavePending();
         }
+
+        // Writes the current theme to disk if it differs from what is saved there
+        public static void SavePending()
+        {
+            string content = SettingsContent();
+            if (content == _savedContent) return;
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+                File.WriteAllText(SettingsPath, content);
+                _savedContent = content;
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        private static string SettingsContent() =>
+            LastCustom is { } custom
+                ? $"{CurrentTheme}\n{Custom(custom.Background, custom.Text)}"
+                : CurrentTheme;
 
         private static bool TryParseCustom(string theme, out Color bg, out Color text)
         {
@@ -111,6 +156,22 @@ namespace Omni
             Set("MutedTextBrush", Blend(text, bg, 0.6));
         }
 
+        private static double ContrastRatio(Color a, Color b)
+        {
+            double la = RelativeLuminance(a), lb = RelativeLuminance(b);
+            return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
+        }
+
+        private static double RelativeLuminance(Color c)
+        {
+            double f(byte v)
+            {
+                double s = v / 255.0;
+                return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
+            }
+            return 0.2126 * f(c.R) + 0.7152 * f(c.G) + 0.0722 * f(c.B);
+        }
+
         private static Color Blend(Color a, Color b, double amountOfA)
         {
             byte f(byte x, byte y) => (byte)Math.Round(x * amountOfA + y * (1 - amountOfA));
@@ -128,17 +189,6 @@ namespace Omni
         {
             byte f(byte v) => (byte)Math.Clamp(v + amount * 255, 0, 255);
             return Color.FromRgb(f(c.R), f(c.G), f(c.B));
-        }
-
-        private static void Save(string theme)
-        {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-                File.WriteAllText(SettingsPath, theme);
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
         }
     }
 }

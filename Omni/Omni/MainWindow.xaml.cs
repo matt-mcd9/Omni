@@ -29,7 +29,6 @@ namespace Omni
                 nameof(NavVideos) => new VideosPage(),
                 nameof(NavGames) => new GamesPage(),
                 nameof(NavSoftware) => new SoftwarePage(),
-                nameof(NavPlaylists) => new PlaylistsPage(),
                 nameof(NavSettings) => new SettingsPage(),
                 _ => PageHost.Content
             };

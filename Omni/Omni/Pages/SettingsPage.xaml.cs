@@ -8,7 +8,7 @@ namespace Omni.Pages
 {
     public partial class SettingsPage : UserControl
     {
-        // Custom colours used when switching to Custom from a preset
+        // Custom background until the user has picked their own colours
         private static readonly Color DefaultCustomBackground = Color.FromRgb(0x1E, 0x3A, 0x5F);
 
         // Suppresses Theme_Checked while the page selects a tile itself
@@ -26,19 +26,19 @@ namespace Omni.Pages
             // Flush a pending save when leaving the page
             Unloaded += (_, _) => { if (_saveTimer.IsEnabled) FlushSave(); };
 
-            string theme = ThemeManager.CurrentTheme;
-            if (ThemeManager.IsCustom(theme))
+            if (ThemeManager.LastCustom is { } custom)
             {
-                BackgroundPicker.Color = ThemeManager.CurrentBackground;
-                TextPicker.Color = ThemeManager.CurrentText;
+                BackgroundPicker.Color = custom.Background;
+                TextPicker.Color = custom.Text;
             }
             else
             {
                 BackgroundPicker.Color = DefaultCustomBackground;
                 TextPicker.Color = ThemeManager.ContrastText(DefaultCustomBackground);
             }
-            UpdateCustomTile();
+            UpdateCustomPreview();
 
+            string theme = ThemeManager.CurrentTheme;
             _syncing = true;
             if (theme == ThemeManager.Light) DayTheme.IsChecked = true;
             else if (theme == ThemeManager.Dark) NightTheme.IsChecked = true;
@@ -51,6 +51,9 @@ namespace Omni.Pages
         {
             if (_syncing) return;
 
+            // Applying below saves right away, so a pending save has nothing left to do
+            _saveTimer.Stop();
+
             CustomPanel.Visibility = sender == CustomTheme ? Visibility.Visible : Visibility.Collapsed;
 
             if (sender == DayTheme) ThemeManager.Apply(ThemeManager.Light);
@@ -60,22 +63,29 @@ namespace Omni.Pages
 
         private void CustomColor_Changed(object? sender, EventArgs e)
         {
-            UpdateCustomTile();
+            UpdateCustomPreview();
             ThemeManager.Apply(CustomThemeValue, save: false);
             _saveTimer.Stop();
             _saveTimer.Start();
         }
 
+        // Only writes what is already applied, so it can never change the active theme
         private void FlushSave()
         {
             _saveTimer.Stop();
-            ThemeManager.Apply(CustomThemeValue);
+            ThemeManager.SavePending();
         }
 
-        private void UpdateCustomTile()
+        private void UpdateCustomPreview()
         {
-            CustomTilePreview.Background = new SolidColorBrush(BackgroundPicker.Color);
-            CustomTileText.Foreground = new SolidColorBrush(TextPicker.Color);
+            Color background = BackgroundPicker.Color;
+            Color text = TextPicker.Color;
+
+            CustomTilePreview.Background = new SolidColorBrush(background);
+            CustomTileText.Foreground = new SolidColorBrush(ThemeManager.ReadableText(background, text));
+            ContrastWarning.Visibility = ThemeManager.IsReadable(background, text)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
     }
 }

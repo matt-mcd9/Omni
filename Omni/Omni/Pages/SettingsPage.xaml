@@ -97,19 +97,25 @@
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="10" Padding="18">
-                <WrapPanel>
-                    <StackPanel Margin="0,0,36,0">
-                        <TextBlock Text="Background colour" Style="{StaticResource SectionHeaderStyle}"
-                                   Margin="0,0,0,12"/>
-                        <controls:ColorPicker x:Name="BackgroundPicker" ColorChanged="CustomColor_Changed"/>
-                    </StackPanel>
+                <StackPanel>
+                    <WrapPanel>
+                        <StackPanel Margin="0,0,36,0">
+                            <TextBlock Text="Background colour" Style="{StaticResource SectionHeaderStyle}"
+                                       Margin="0,0,0,12"/>
+                            <controls:ColorPicker x:Name="BackgroundPicker" ColorChanged="CustomColor_Changed"/>
+                        </StackPanel>
 
-                    <StackPanel>
-                        <TextBlock Text="Text colour" Style="{StaticResource SectionHeaderStyle}"
-                                   Margin="0,0,0,12"/>
-                        <controls:ColorPicker x:Name="TextPicker" ColorChanged="CustomColor_Changed"/>
-                    </StackPanel>
-                </WrapPanel>
+                        <StackPanel>
+                            <TextBlock Text="Text colour" Style="{StaticResource SectionHeaderStyle}"
+                                       Margin="0,0,0,12"/>
+                            <controls:ColorPicker x:Name="TextPicker" ColorChanged="CustomColor_Changed"/>
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <TextBlock x:Name="ContrastWarning" Visibility="Collapsed" Margin="0,14,0,0"
+                               Style="{StaticResource HintStyle}"
+                               Text="These colours are too similar to read, so text is shown in black or white until you change them."/>
+                </StackPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>

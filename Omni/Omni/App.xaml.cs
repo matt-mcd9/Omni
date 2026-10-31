@@ -15,5 +15,13 @@ namespace Omni
             using var db = new OmniDbContext();
             db.Database.Migrate();
         }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            // A colour change may still be waiting on the Settings page's save timer
+            ThemeManager.SavePending();
+
+            base.OnExit(e);
+        }
     }
 }

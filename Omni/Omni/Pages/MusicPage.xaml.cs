@@ -13,6 +13,7 @@ namespace Omni.Pages
 
         private LibVLC _libVLC;
         private MediaPlayer? _mediaPlayer;
+        private bool _isSeeking = false;
 
 
         public MusicPage()
@@ -23,6 +24,10 @@ namespace Omni.Pages
 
             _libVLC = new LibVLC();
             _mediaPlayer = new MediaPlayer(_libVLC);
+
+            _mediaPlayer.LengthChanged += MediaPlayer_LengthChanged;
+            _mediaPlayer.TimeChanged += MediaPlayer_TimeChanged;
+
         }
 
         private async void Open_Click(object sender, RoutedEventArgs e)
@@ -90,7 +95,66 @@ namespace Omni.Pages
             AlbumArt.Source = null;
 
         }
+        private void VolumeSet(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_mediaPlayer == null)
+                return;
 
- 
+            _mediaPlayer.Volume = (int)e.NewValue;
+        }
+        private void MediaPlayer_LengthChanged(
+    object? sender,
+    MediaPlayerLengthChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                SeekBar.Maximum = e.Length;
+
+                TotalTimeText.Text = FormatTime(e.Length);
+            });
+        }
+
+        private void MediaPlayer_TimeChanged(
+            object? sender,
+            MediaPlayerTimeChangedEventArgs e)
+        {
+            if (_isSeeking)
+                return;
+
+            Dispatcher.Invoke(() =>
+            {
+                SeekBar.Value = e.Time;
+
+                CurrentTimeText.Text = FormatTime(e.Time);
+            });
+        }
+        private void SeekBar_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _isSeeking = true;
+        }
+
+        private void SeekBar_PreviewMouseLeftButtonUp(
+            object sender,
+            System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_mediaPlayer != null)
+            {
+                _mediaPlayer.Time = (long)SeekBar.Value;
+            }
+
+            _isSeeking = false;
+        }
+        private string FormatTime(long milliseconds)
+        {
+            TimeSpan time = TimeSpan.FromMilliseconds(milliseconds);
+
+            if (time.TotalHours >= 1)
+            {
+                return time.ToString(@"h\:mm\:ss");
+            }
+
+            return time.ToString(@"m\:ss");
+        }
+
     }
 }

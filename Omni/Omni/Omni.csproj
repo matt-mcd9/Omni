@@ -9,9 +9,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Pictures\album.png" />
+    <None Remove="Pictures\ColorBars.png" />
+    <None Remove="Pictures\sound.png" />
+    <None Remove="Pictures\soundlow.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="LibVLCSharp.WPF" Version="3.10.0" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Pictures\album.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Pictures\ColorBars.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Pictures\sound.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Pictures\soundlow.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

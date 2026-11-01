@@ -27,5 +27,13 @@ namespace Omni
             // so the app needs at least one user row before any page loads.
             CurrentUser = new OmniService().GetOrCreateDefaultUser();
         }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            // A colour change may still be waiting on the Settings page's save timer
+            ThemeManager.SavePending();
+
+            base.OnExit(e);
+        }
     }
 }

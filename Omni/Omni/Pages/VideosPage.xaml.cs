@@ -1,25 +1,49 @@
-using System.Windows.Controls;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using LibVLCSharp.Shared;
 using Microsoft.Win32;
-using System.Collections;
-using System.IO;
 using Omni.Data;
 
 namespace Omni.Pages
 {
+    // A playable file found by scanning a folder
+    public record VideoFile(string Name, string Path, string Details);
+
     public partial class VideosPage : UserControl
     {
+        private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".m4v",
+            ".flv", ".mpg", ".mpeg", ".ts", ".m2ts", ".3gp",
+        };
+
+        private const string PlayGlyph = "";
+        private const string PauseGlyph = "";
+
         private LibVLC? _libVLC;
         private MediaPlayer? _mediaPlayer;
-        // Every video found by the last folder search (holds AppEntry objects).
+
+        private string? _currentPath;
+        // File picked before the player finished initialising
+        private string? _pendingPath;
+        // True while the user is dragging the seek bar, so playback doesn't move it
+        private bool _seeking;
+
+        // Every video found by the last folder scan (holds AppEntry objects).
         // Static so it survives leaving the page (MainWindow creates a new page
         // each time) and so the Home page can search and count it.
         public static ArrayList foundVideos = new ArrayList();
+
         public VideosPage()
         {
-           InitializeComponent();
+            InitializeComponent();
 
             Loaded += VideosPage_Loaded;
         }
@@ -30,6 +54,7 @@ namespace Omni.Pages
 
             await InitializePlayerAsync();
         }
+
         private async Task InitializePlayerAsync()
         {
             await Task.Run(() =>
@@ -40,123 +65,297 @@ namespace Omni.Pages
                 _mediaPlayer = new MediaPlayer(_libVLC);
             });
 
-            videoView.MediaPlayer = _mediaPlayer;
+            // LibVLC raises these on its own thread
+            _mediaPlayer!.Playing += OnPlaying;
+            _mediaPlayer.Paused += OnPausedOrStopped;
+            _mediaPlayer.Stopped += OnPausedOrStopped;
+            _mediaPlayer.EndReached += OnEndReached;
+            _mediaPlayer.TimeChanged += OnTimeChanged;
+            _mediaPlayer.LengthChanged += OnLengthChanged;
 
+            videoView.MediaPlayer = _mediaPlayer;
             placeholder.Visibility = Visibility.Visible;
 
-        }
-        private async void Open_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog
+            if (_pendingPath is not null)
             {
-                Filter =
-                    "Video Files|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm|" +
-                    "All Files|*.*"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                using Media media = new Media(
-                    _libVLC,
-                    new Uri(dialog.FileName)
-                );
-                videoView.Visibility = Visibility.Visible;
-                _mediaPlayer.Volume = 100;
-                _mediaPlayer.Play(media);
-
+                PlayFile(_pendingPath);
+                _pendingPath = null;
             }
         }
 
-        private void Play_Click(object sender, RoutedEventArgs e)
+        // ----- Folder scanning -----
+
+        private async void ChooseFolder_Click(object sender, RoutedEventArgs e)
         {
-            _mediaPlayer.Play();
+            var dialog = new OpenFolderDialog { Title = "Choose a folder with videos" };
+            if (dialog.ShowDialog() != true) return;
+
+            string folder = dialog.FolderName;
+            FolderText.Text = folder;
+            FolderText.ToolTip = folder;
+            FolderText.Visibility = Visibility.Visible;
+            StatusText.Text = "Scanning…";
+            StatusText.Visibility = Visibility.Visible;
+            EmptyText.Visibility = Visibility.Collapsed;
+            VideoList.ItemsSource = null;
+
+            List<VideoFile> videos;
+            try
+            {
+                videos = await Task.Run(() => ScanFolder(folder));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                StatusText.Text = "Couldn't read this folder.";
+                return;
+            }
+
+            VideoList.ItemsSource = videos;
+            StatusText.Text = videos.Count == 1 ? "1 video" : $"{videos.Count} videos";
+
+            // Keep the scan in the ArrayList for the Home page search
+            foundVideos.Clear();
+            foreach (VideoFile video in videos)
+                foundVideos.Add(new SoftwarePage.AppEntry { Name = video.Name, FullPath = video.Path });
+            // Save what was found to the database (category 2 = Video) so the
+            // Home page counts it; files already saved are skipped
+            new OmniService().SaveLibraryItems(App.CurrentUser.UserId, 2, "Video", foundVideos);
+
+            if (videos.Count == 0)
+            {
+                EmptyText.Text = "No videos found in this folder or its subfolders.";
+                EmptyText.Visibility = Visibility.Visible;
+            }
         }
 
-        private void Pause_Click(object sender, RoutedEventArgs e)
+        // Finds playable videos in the folder and all of its subfolders
+        private static List<VideoFile> ScanFolder(string folder)
         {
-            _mediaPlayer.Pause();
+            var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+
+            return Directory.EnumerateFiles(folder, "*", options)
+                .Where(path => VideoExtensions.Contains(Path.GetExtension(path)))
+                .Select(path => ToVideoFile(folder, path))
+                .OrderBy(v => v.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
+        private static VideoFile ToVideoFile(string root, string path)
+        {
+            var info = new FileInfo(path);
+            var details = new List<string>
+            {
+                info.Extension.TrimStart('.').ToUpperInvariant(),
+                FormatSize(info.Length),
+            };
+
+            // Show which subfolder the file came from
+            string relativeDir = Path.GetRelativePath(root, info.DirectoryName ?? root);
+            if (relativeDir != ".") details.Add(relativeDir);
+
+            return new VideoFile(Path.GetFileNameWithoutExtension(path), path, string.Join(" · ", details));
+        }
+
+        private static string FormatSize(long bytes)
+        {
+            string[] units = { "B", "KB", "MB", "GB", "TB" };
+            double size = bytes;
+            int unit = 0;
+            while (size >= 1024 && unit < units.Length - 1)
+            {
+                size /= 1024;
+                unit++;
+            }
+            return unit == 0 ? $"{bytes} B" : $"{size:0.#} {units[unit]}";
+        }
+
+        private void VideoList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (VideoList.SelectedItem is VideoFile video)
+                PlayFile(video.Path);
+        }
+
+        // ----- Playback -----
+
+        private void PlayFile(string path)
+        {
+            if (_libVLC is null || _mediaPlayer is null)
+            {
+                _pendingPath = path;
+                return;
+            }
+
+            _currentPath = path;
+            NowPlayingText.Text = Path.GetFileNameWithoutExtension(path);
+
+            using Media media = new Media(_libVLC, new Uri(path));
+            placeholder.Visibility = Visibility.Collapsed;
+            videoView.Visibility = Visibility.Visible;
+            _mediaPlayer.Volume = (int)VolumeSlider.Value;
+            _mediaPlayer.Play(media);
+            // Save the play to LaunchHistory so it shows on the Home page
+            new OmniService().RecordLaunchByPath(App.CurrentUser.UserId, path);
+        }
+
+        private void Open_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter =
+                    "Video Files|" + string.Join(";", VideoExtensions.Select(ext => "*" + ext)) + "|" +
+                    "All Files|*.*"
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            // If the file is in the scanned list, select it so the list stays in sync
+            var match = (VideoList.ItemsSource as IEnumerable<VideoFile>)?
+                .FirstOrDefault(v => string.Equals(v.Path, dialog.FileName, StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+            {
+                VideoList.SelectedItem = match;
+                VideoList.ScrollIntoView(match);
+            }
+            else
+            {
+                VideoList.SelectedItem = null;
+                PlayFile(dialog.FileName);
+            }
+        }
+
+        private void PlayPause_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mediaPlayer is null) return;
+
+            if (_mediaPlayer.IsPlaying)
+                _mediaPlayer.SetPause(true);
+            else if (_mediaPlayer.State == VLCState.Paused)
+                _mediaPlayer.SetPause(false);
+            else if (_currentPath is not null)
+                PlayFile(_currentPath);
+            else if (VideoList.Items.Count > 0)
+                VideoList.SelectedIndex = 0;
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
-            videoView.Visibility = Visibility.Collapsed;
-            
-            _mediaPlayer.Stop();
+            _mediaPlayer?.Stop();
+            ResetPlayerUi();
         }
 
-        private void VideosPage_Unloaded(object sender, RoutedEventArgs e)
+        private void Previous_Click(object sender, RoutedEventArgs e)
         {
-            _mediaPlayer.Stop();
-            
+            if (VideoList.SelectedIndex > 0)
+                VideoList.SelectedIndex--;
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e) => PlayNext();
+
+        private bool PlayNext()
+        {
+            if (VideoList.SelectedIndex < 0 || VideoList.SelectedIndex >= VideoList.Items.Count - 1)
+                return false;
+
+            VideoList.SelectedIndex++;
+            VideoList.ScrollIntoView(VideoList.SelectedItem);
+            return true;
+        }
+
+        private void ResetPlayerUi()
+        {
+            videoView.Visibility = Visibility.Collapsed;
+            placeholder.Visibility = Visibility.Visible;
+            SeekSlider.Value = 0;
+            CurrentTimeText.Text = FormatTime(0);
+            PlayPauseButton.Content = PlayGlyph;
+            PlayPauseButton.ToolTip = "Play";
         }
 
         private void VolumeSet(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            _mediaPlayer.Volume = (int)e.NewValue;
-            
+            if (_mediaPlayer is not null)
+                _mediaPlayer.Volume = (int)e.NewValue;
         }
 
-        // Lets the user pick a folder, then finds every video inside it (including subfolders)
-        private void selectVideoFolder_Click(object sender, RoutedEventArgs e) {
-            OpenFolderDialog dialog = new OpenFolderDialog();
-            // Stop if the dialog was cancelled, so the current list is kept
-            if (dialog.ShowDialog() != true) return;
-            if (!Directory.Exists(dialog.FolderName)) return;
+        private void SeekSlider_MouseDown(object sender, MouseButtonEventArgs e) => _seeking = true;
 
-            // New search, so start the ArrayList over
-            foundVideos.Clear();
-
-            // Same video types the Open button's file filter accepts
-            String[] videoTypes = { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm" };
-
-            foreach (String file in Directory.GetFiles(dialog.FolderName, "*", SearchOption.AllDirectories)) {
-                // Only keep video files; ToLower so ".MP4" matches too
-                if (videoTypes.Contains(Path.GetExtension(file).ToLower())) {
-                    // Name is what the list shows, FullPath is what gets played
-                    foundVideos.Add(new SoftwarePage.AppEntry {
-                        Name = Path.GetFileNameWithoutExtension(file),
-                        FullPath = file
-                    });
-                }
-            }
-            // Save what was found to the database (category 2 = Video) so the
-            // Home page counts it; files already saved are skipped
-            new OmniService().SaveLibraryItems(App.CurrentUser.UserId, 2, "Video", foundVideos);
-            // Show the results, keeping whatever is already typed in the search box
-            ShowVideos(searchVideos.Text);
+        private void SeekSlider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            _seeking = false;
+            if (_mediaPlayer is not null && _mediaPlayer.IsSeekable)
+                _mediaPlayer.Position = (float)SeekSlider.Value;
         }
 
-        // Filters the video list each time the text in the search box changes
-        private void searchVideos_TextChanged(object sender, TextChangedEventArgs e) {
-            ShowVideos(searchVideos.Text);
+        // ----- Player events (raised on LibVLC's thread, so marshal to the UI) -----
+
+        private void OnPlaying(object? sender, EventArgs e) => Dispatcher.BeginInvoke(() =>
+        {
+            PlayPauseButton.Content = PauseGlyph;
+            PlayPauseButton.ToolTip = "Pause";
+        });
+
+        private void OnPausedOrStopped(object? sender, EventArgs e) => Dispatcher.BeginInvoke(() =>
+        {
+            PlayPauseButton.Content = PlayGlyph;
+            PlayPauseButton.ToolTip = "Play";
+        });
+
+        // Continue with the next video in the list; otherwise go back to idle
+        private void OnEndReached(object? sender, EventArgs e) => Dispatcher.BeginInvoke(() =>
+        {
+            if (!PlayNext())
+                ResetPlayerUi();
+        });
+
+        private void OnTimeChanged(object? sender, MediaPlayerTimeChangedEventArgs e)
+        {
+            long time = e.Time;
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (_mediaPlayer is null) return;
+
+                CurrentTimeText.Text = FormatTime(time);
+                if (!_seeking)
+                    SeekSlider.Value = _mediaPlayer.Position;
+            });
         }
 
-        // Fills the ListBox with the videos in foundVideos whose name contains the search text
-        private void ShowVideos(String filter) {
-            listVideos.Items.Clear();
-
-            foreach (SoftwarePage.AppEntry video in foundVideos) {
-                // An empty search shows everything; otherwise match anywhere in the name, ignoring case
-                if (String.IsNullOrWhiteSpace(filter) ||
-                    video.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) {
-                    listVideos.Items.Add(video);
-                }
-            }
+        private void OnLengthChanged(object? sender, MediaPlayerLengthChangedEventArgs e)
+        {
+            long length = e.Length;
+            Dispatcher.BeginInvoke(() => TotalTimeText.Text = FormatTime(length));
         }
 
-        // Double-click a video in the list to play it in the built-in player
-        private void playVideo_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
-            // The list holds AppEntry objects; stop if nothing is selected
-            if (listVideos.SelectedItem is not SoftwarePage.AppEntry video) return;
-
-            // Same playback steps as Open_Click, using the selected video's path
-            using Media media = new Media(_libVLC, new Uri(video.FullPath));
-            videoView.Visibility = Visibility.Visible;
-            _mediaPlayer.Volume = 100;
-            _mediaPlayer.Play(media);
-            // Save the play to LaunchHistory so it shows on the Home page
-            new OmniService().RecordLaunchByPath(App.CurrentUser.UserId, video.FullPath);
+        private static string FormatTime(long milliseconds)
+        {
+            var t = TimeSpan.FromMilliseconds(Math.Max(0, milliseconds));
+            return t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
         }
 
+        private void VideosPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            var player = _mediaPlayer;
+            var libVLC = _libVLC;
+            if (player is null) return;
+
+            player.Playing -= OnPlaying;
+            player.Paused -= OnPausedOrStopped;
+            player.Stopped -= OnPausedOrStopped;
+            player.EndReached -= OnEndReached;
+            player.TimeChanged -= OnTimeChanged;
+            player.LengthChanged -= OnLengthChanged;
+
+            videoView.MediaPlayer = null;
+            _mediaPlayer = null;
+            _libVLC = null;
+
+            // Stopping LibVLC can block briefly, so release it off the UI thread
+            Task.Run(() =>
+            {
+                player.Stop();
+                player.Dispose();
+                libVLC?.Dispose();
+            });
+        }
     }
 }

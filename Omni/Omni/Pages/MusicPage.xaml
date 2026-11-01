@@ -1,79 +1,267 @@
-<UserControl
+<UserControl x:Class="Omni.Pages.MusicPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF" xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="Omni.Pages.MusicPage" Width="1068">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
 
-    <Grid Margin="20">
+        <Style x:Key="IconStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <!-- Round icon button for the player controls; Content is a glyph -->
+        <Style x:Key="PlayerButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="24">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Outlined button with an icon + text (Open file) -->
+        <Style x:Key="OutlineButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent"
+                                BorderBrush="{DynamicResource MutedTextBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rows in the playlist; the selected row is the song playing now -->
+        <Style x:Key="SongItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+            <EventSetter Event="MouseLeftButtonUp" Handler="Song_MouseUp"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="10,7">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
-            <RowDefinition Height="0*"/>
-            <RowDefinition Height="0"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Music"
-                   Foreground="{DynamicResource TextBrush}"
-                   FontSize="26"
-                   FontWeight="Bold"
-                   Margin="0,0,0,15"/>
+        <TextBlock Text="Music" Foreground="{DynamicResource TextBrush}"
+                   FontSize="26" FontWeight="Bold" Margin="0,0,0,16"/>
 
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <Viewbox Grid.Row="1"
-                 Stretch="Uniform"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center">
+            <!-- ===== Playlist ===== -->
+            <Border Background="{DynamicResource SidebarBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="12">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="2,0,0,8">
+                        <TextBlock Text="Playlist" Foreground="{DynamicResource TextBrush}"
+                                   FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button HorizontalAlignment="Right" Style="{StaticResource OutlineButtonStyle}"
+                                Click="Open_Click" ToolTip="Play a song without adding it to the playlist">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8E5;" Style="{StaticResource IconStyle}" FontSize="13"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Open file" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
-            <Grid Width="1280"
-                  Height="720">
-                <Image Name="AlbumArt" HorizontalAlignment="Left" Height="430" Margin="336,87,0,0" VerticalAlignment="Top" Width="595" Stretch="UniformToFill"/>
+                    <Button DockPanel.Dock="Top" Margin="2,0,0,8" HorizontalAlignment="Stretch"
+                            Style="{StaticResource OutlineButtonStyle}" Click="AddSongs_Click"
+                            ToolTip="Add songs to the playlist">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" Style="{StaticResource IconStyle}" FontSize="13"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Add songs" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
+                    <TextBlock x:Name="StatusText" DockPanel.Dock="Top" Margin="2,0,0,8"
+                               Foreground="{DynamicResource MutedTextBrush}" FontSize="12"
+                               TextWrapping="Wrap" Visibility="Collapsed"/>
+
+                    <Grid>
+                        <ListBox x:Name="PlaylistList" Background="Transparent" BorderThickness="0"
+                                 ItemContainerStyle="{StaticResource SongItemStyle}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 KeyDown="PlaylistList_KeyDown">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ToolTip="{Binding Path}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#xE8D6;" Style="{StaticResource IconStyle}" FontSize="15"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}" FontSize="13"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="{Binding Details}" FontSize="11"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                        </StackPanel>
+                                        <!-- Shown only while the pointer is over the row -->
+                                        <Button Grid.Column="2" Content="&#xE711;" ToolTip="Remove from playlist"
+                                                Width="24" Height="24" FontSize="10" Margin="4,0,0,0"
+                                                Click="RemoveSong_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource PlayerButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Hidden"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock x:Name="EmptyText" Margin="2,4,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="13"
+                                   Text="Add songs to build your playlist."/>
+                    </Grid>
+                </DockPanel>
+            </Border>
+
+            <!-- ===== Player: album art above the track details and controls ===== -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Fixed-size square that the Viewbox scales to the space available -->
+                <Viewbox Stretch="Uniform" HorizontalAlignment="Center">
+                    <Grid Width="320" Height="320">
+                        <Border Background="{DynamicResource SidebarBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="14"/>
+                        <TextBlock Text="&#xE8D6;" FontSize="72" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   Foreground="{DynamicResource MutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Source, ElementName=AlbumArt}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Image x:Name="AlbumArt" Stretch="UniformToFill">
+                            <Image.Clip>
+                                <RectangleGeometry Rect="0,0,320,320" RadiusX="14" RadiusY="14"/>
+                            </Image.Clip>
+                        </Image>
+                    </Grid>
+                </Viewbox>
+
+                <TextBlock x:Name="TitleText" Grid.Row="1" Text="Nothing playing" Margin="0,16,0,0"
+                           Foreground="{DynamicResource TextBrush}" FontSize="20" FontWeight="SemiBold"
+                           TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="DetailsText" Grid.Row="2" Margin="0,2,0,0" Visibility="Collapsed"
+                           Foreground="{DynamicResource MutedTextBrush}" FontSize="13"
+                           TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Seek bar -->
+                <Grid Grid.Row="3" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="CurrentTimeText" Text="0:00" Width="44" FontSize="12"
+                               Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                    <Slider x:Name="SeekSlider" Grid.Column="1" Minimum="0" Maximum="1"
+                            IsMoveToPointEnabled="True" VerticalAlignment="Center"
+                            PreviewMouseLeftButtonDown="SeekSlider_MouseDown"
+                            PreviewMouseLeftButtonUp="SeekSlider_MouseUp"/>
+                    <TextBlock x:Name="TotalTimeText" Grid.Column="2" Text="0:00" Width="44" FontSize="12"
+                               TextAlignment="Right"
+                               Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Controls -->
+                <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                    <Button x:Name="PlayPauseButton" Content="&#xE768;" ToolTip="Play"
+                            Style="{StaticResource PlayerButtonStyle}" FontSize="20" Width="48" Height="48"
+                            Click="PlayPause_Click"/>
+                    <Button Content="&#xE71A;" ToolTip="Stop"
+                            Style="{StaticResource PlayerButtonStyle}" Click="Stop_Click"/>
+                    <TextBlock Text="&#xE767;" Style="{StaticResource IconStyle}" FontSize="15"
+                               VerticalAlignment="Center" Margin="16,0,8,0"/>
+                    <Slider x:Name="VolumeSlider" Width="90" Minimum="0" Maximum="100" Value="100"
+                            IsMoveToPointEnabled="True" VerticalAlignment="Center"
+                            ValueChanged="VolumeSet"/>
+                </StackPanel>
             </Grid>
-        </Viewbox>
-
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top" Width="276" Margin="0,487,0,0" RenderTransformOrigin="0.5,0.5">
-            <StackPanel.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform ScaleX="1"/>
-                    <SkewTransform/>
-                    <RotateTransform/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </StackPanel.RenderTransform>
-
-            <Button Width="80"
-                    Margin="5"
-                    Content="Open"
-                    Click="Open_Click"/>
-
-            <Button Width="80"
-                    Margin="5"
-                    Content="Play/Pause"
-                    Click="Pause_Click"/>
-
-            <Button Width="80"
-                    Margin="5"
-                    Content="Stop"
-                    Click="Stop_Click"/>
-
-        </StackPanel>
-
-        <ProgressBar Height="10" Width="500" Margin="264,454,264,114" Grid.Row="1"/>
-        
-        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="250">
-            <TextBox x:Name="searchMusic" Height="28" Margin="0,0,0,8"
-                     TextChanged="searchMusic_TextChanged"/>
-            <Button Height="30" Content="Select Folder" Click="selectMusicFolder_Click"/>
-            <ListBox x:Name="listSongs" Height="300" Margin="0,8,0,0"
-                     Background="{DynamicResource SidebarBrush}"
-                     Foreground="{DynamicResource TextBrush}"
-                     MouseDoubleClick="playSong_MouseDoubleClick"/>
-        </StackPanel>
-
-
+        </Grid>
     </Grid>
-
 </UserControl>

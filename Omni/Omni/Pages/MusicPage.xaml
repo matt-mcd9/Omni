@@ -62,6 +62,16 @@
         </StackPanel>
 
         <ProgressBar Height="10" Width="500" Margin="264,454,264,114" Grid.Row="1"/>
+        
+        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="250">
+            <TextBox x:Name="searchMusic" Height="28" Margin="0,0,0,8"
+                     TextChanged="searchMusic_TextChanged"/>
+            <Button Height="30" Content="Select Folder" Click="selectMusicFolder_Click"/>
+            <ListBox x:Name="listSongs" Height="300" Margin="0,8,0,0"
+                     Background="{DynamicResource SidebarBrush}"
+                     Foreground="{DynamicResource TextBrush}"
+                     MouseDoubleClick="playSong_MouseDoubleClick"/>
+        </StackPanel>
 
 
     </Grid>

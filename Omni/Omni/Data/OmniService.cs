@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Omni.Models;
-
+using System.Collections;
+using Omni.Pages;
 namespace Omni.Data
 {
     public class OmniService
@@ -60,6 +60,63 @@ namespace Omni.Data
                 LaunchedDate = DateTime.Now
             });
             db.SaveChanges();
+        }
+        // Records a launch for pages that only know the file path.
+        // Does nothing if the file was never saved to MediaItems by a folder scan.
+        public void RecordLaunchByPath(int userId, string filePath)
+        {
+            using var db = new OmniDbContext();
+
+            // Find the saved MediaItem for this file, since LaunchHistory needs its MediaId
+            var item = db.MediaItems.FirstOrDefault(m => m.UserId == userId && m.FilePath == filePath);
+            if (item is null) return;
+
+            // Same as RecordLaunch: one history row per launch, stamped with the current time
+            db.LaunchHistory.Add(new LaunchHistory
+            {
+                UserId = userId,
+                MediaId = item.MediaId,
+                LaunchedDate = DateTime.Now
+            });
+            db.SaveChanges();
+        }
+        // Saves the items a page found in a folder scan as MediaItems.
+        // Files already in the database (same path) are skipped, so scanning
+        // the same folder twice doesn't add duplicates.
+        public int SaveLibraryItems(int userId, int categoryId, string mediaType, ArrayList found)
+        {
+            // A new short-lived DbContext, same pattern as the other methods
+            using var db = new OmniDbContext();
+
+            // Paths this user already has saved in this category.
+            // A HashSet makes "is this path already saved?" a fast check.
+            var existingPaths = db.MediaItems
+                .Where(m => m.UserId == userId && m.CategoryId == categoryId)
+                .Select(m => m.FilePath)
+                .ToHashSet();
+
+            int added = 0;
+            foreach (SoftwarePage.AppEntry entry in found)
+            {
+                // HashSet.Add returns false if the path is already there,
+                // which also skips a file that appears twice in the same scan
+                if (!existingPaths.Add(entry.FullPath)) continue;
+
+                // Queue a new row; nothing is written until SaveChanges below
+                db.MediaItems.Add(new MediaItem
+                {
+                    UserId = userId,
+                    Title = entry.Name,
+                    FilePath = entry.FullPath,
+                    MediaType = mediaType,
+                    CategoryId = categoryId
+                });
+                added++;
+            }
+
+            // One SaveChanges for the whole scan instead of one per file
+            db.SaveChanges();
+            return added;
         }
 
         // Number of media items per CategoryId

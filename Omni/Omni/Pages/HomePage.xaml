@@ -102,7 +102,20 @@
                        FontSize="26" FontWeight="Bold"/>
             <TextBlock x:Name="DateText" Foreground="{DynamicResource MutedTextBrush}"
                        FontSize="13" Margin="0,4,0,20"/>
+            <!-- ===== Search across everything found on the other pages ===== -->
+            <TextBox x:Name="HomeSearchBox" Height="32" Padding="8,5" FontSize="14" Margin="0,0,0,12"
+                     Background="{DynamicResource SidebarBrush}"
+                     Foreground="{DynamicResource TextBrush}"
+                     BorderBrush="{DynamicResource BorderBrush}"
+                     TextChanged="HomeSearchBox_TextChanged"/>
 
+            <StackPanel x:Name="SearchResultsPanel" Visibility="Collapsed">
+                <TextBlock Text="Search results" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,12"/>
+                <ItemsControl x:Name="SearchResultsList" ItemTemplate="{StaticResource MediaCardTemplate}"
+                              ItemsPanel="{StaticResource WrapPanelTemplate}"/>
+                <TextBlock x:Name="SearchEmpty" Text="Nothing matches your search."
+                           Style="{StaticResource EmptyTextStyle}"/>
+            </StackPanel>
             <!-- ===== Continue: the last opened item ===== -->
             <Border x:Name="ContinueCard" Visibility="Collapsed"
                     Background="{DynamicResource SidebarBrush}"
@@ -199,6 +212,36 @@
             <ItemsControl x:Name="RecentList" ItemTemplate="{StaticResource MediaCardTemplate}"
                           ItemsPanel="{StaticResource WrapPanelTemplate}"/>
             <TextBlock x:Name="RecentEmpty" Text="Things you open will appear here."
+                       Style="{StaticResource EmptyTextStyle}"/>
+            <!-- ===== History: every launch, newest first ===== -->
+            <TextBlock Text="History" Style="{StaticResource SectionHeaderStyle}"/>
+            <ListBox x:Name="HistoryList" Height="250"
+                     Background="{DynamicResource SidebarBrush}"
+                     Foreground="{DynamicResource TextBrush}"
+                     BorderBrush="{DynamicResource BorderBrush}"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="HistoryList_MouseDoubleClick">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="4,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontSize="14"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="{Binding Subtitle}" FontSize="12"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Text="{Binding When}" FontSize="12" Margin="12,0,0,0"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="HistoryEmpty" Text="Your launch history will appear here."
                        Style="{StaticResource EmptyTextStyle}"/>
 
             <!-- ===== Favourites ===== -->

@@ -35,6 +35,13 @@ namespace Omni
             };
         }
 
+        // Lets pages switch page by sidebar name, e.g. NavigateTo("Music")
+        public void NavigateTo(string page)
+        {
+            if (FindName("Nav" + page) is RadioButton rb)
+                rb.IsChecked = true;
+        }
+
         // ----- Custom title bar behaviour -----
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -58,6 +65,15 @@ namespace Omni
             WindowState = WindowState == WindowState.Maximized
                 ? WindowState.Normal
                 : WindowState.Maximized;
+        }
+
+        // Swap the maximize / restore glyph to match the window state
+        protected override void OnStateChanged(System.EventArgs e)
+        {
+            base.OnStateChanged(e);
+            bool maximized = WindowState == WindowState.Maximized;
+            MaximizeButton.Content = maximized ? "" : "";
+            MaximizeButton.ToolTip = maximized ? "Restore" : "Maximize";
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)

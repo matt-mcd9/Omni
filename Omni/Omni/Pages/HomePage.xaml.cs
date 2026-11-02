@@ -47,12 +47,12 @@ namespace Omni.Pages
             // Recently opened: each item once (DistinctBy keeps its newest launch),
             // up to 10 items; the newest also fills the Continue card
             ShowRecent(history
-                .Where(h => h.MediaItem is not null)
-                .Select(h => h.MediaItem!)
-                .DistinctBy(m => m.MediaId)
+                .Where(h => h.PlaylistItem is not null)
+                .Select(h => h.PlaylistItem!)
+                .DistinctBy(i => i.PlaylistItemId)
                 .Take(10)
                 .ToList());
-            ShowFavourites(new List<MediaItem>());      
+            ShowFavourites(new List<PlaylistItem>());
             
         }
         // Fills the scrollable History list with every launch, newest first
@@ -61,12 +61,12 @@ namespace Omni.Pages
             // Turn each LaunchHistory row into the text the list shows:
             // title, type (Music/Video/Game/Software) and when it was opened
             var rows = history
-                .Where(h => h.MediaItem is not null)
+                .Where(h => h.PlaylistItem is not null)
                 .Select(h => new HistoryRow(
-                    h.MediaItem!.Title,
-                    h.MediaItem.MediaType,
+                    h.PlaylistItem!.Title,
+                    h.PlaylistItem.MediaType,
                     h.LaunchedDate.ToString("d MMM, HH:mm", CultureInfo.GetCultureInfo("en-GB")),
-                    h.MediaItem.FilePath))
+                    h.PlaylistItem.FilePath))
                 .ToList();
 
             HistoryList.ItemsSource = rows;
@@ -105,7 +105,7 @@ namespace Omni.Pages
         }
 
         // Most recent first; the first item also fills the Continue card
-        private void ShowRecent(IList<MediaItem> items)
+        private void ShowRecent(IList<PlaylistItem> items)
         {
             var cards = items.Select(ToCard).ToList();
             RecentList.ItemsSource = cards;
@@ -127,14 +127,14 @@ namespace Omni.Pages
             GetStartedCard.Visibility = Visibility.Collapsed;
         }
 
-        private void ShowFavourites(IList<MediaItem> items)
+        private void ShowFavourites(IList<PlaylistItem> items)
         {
             var cards = items.Select(ToCard).ToList();
             FavouritesList.ItemsSource = cards;
             FavouritesEmpty.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private static MediaCardItem ToCard(MediaItem item)
+        private static MediaCardItem ToCard(PlaylistItem item)
         {
             var (glyph, label) = item.CategoryId switch
             {

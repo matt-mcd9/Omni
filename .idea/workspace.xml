@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5751dc95-c8b1-40f4-abad-c6da91ee4d41" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Data/Migrations/OmniDbContextModelSnapshot.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Data/Migrations/OmniDbContextModelSnapshot.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Data/OmniDbContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Data/OmniDbContext.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Data/OmniService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Data/OmniService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/Category.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Models/Category.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/Favourite.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Models/Favourite.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/LaunchHistory.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Models/LaunchHistory.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/MediaItem.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/PlaylistItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Models/PlaylistItem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Models/UserProfile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Models/UserProfile.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Omni/Omni/Pages/HomePage.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Omni/Omni/Pages/HomePage.xaml.cs" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DpaMonitoringSettings">
+    <option name="firstShow" value="false" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="1494" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Zarov99&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/matt-mcd9/Omni.git&quot;,
+    &quot;accountId&quot;: &quot;a67f76e6-832d-4ba2-af56-755678b0feea&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Omni/Omni/Data/OmniService.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Omni/Omni/Pages/HomePage.xaml.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="3LYsxsZJQqrwhckakdEU8fAeAqx" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    ".NET File.OMNI.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "DB-/Search",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="OMNI" type="RunDotNetFile" factoryName="RunDotNetFile">
+      <option name="filePath" value="C:\Users\nikol\Documents\GitHub\Omni\Omni\Omni.slnx" />
+      <option name="programParameters" value="" />
+      <option name="terminalMode" value="Auto" />
+      <option name="workingDirectory" value="C:\Users\nikol\Documents\GitHub\Omni\Omni" />
+      <method v="2">
+        <option name="BuildDotNetFile" />
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5751dc95-c8b1-40f4-abad-c6da91ee4d41" name="Changes" comment="" />
+      <created>1793642591252</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1793642591252</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.OperationCanceledException" breakIfHandledByOtherCode="false" displayValue="System.OperationCanceledException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.Tasks.TaskCanceledException" breakIfHandledByOtherCode="false" displayValue="System.Threading.Tasks.TaskCanceledException" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

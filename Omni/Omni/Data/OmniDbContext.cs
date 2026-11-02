@@ -9,7 +9,6 @@ namespace Omni.Data
     {
         public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
         public DbSet<Category> Categories => Set<Category>();
-        public DbSet<MediaItem> MediaItems => Set<MediaItem>();
         public DbSet<Playlist> Playlists => Set<Playlist>();
         public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
         public DbSet<Favourite> Favourites => Set<Favourite>();
@@ -29,23 +28,10 @@ namespace Omni.Data
         {
             modelBuilder.Entity<LaunchHistory>().HasKey(h => h.HistoryId);
             modelBuilder.Entity<UserProfile>().HasKey(u => u.UserId);
-            modelBuilder.Entity<MediaItem>().HasKey(m => m.MediaId);
 
             modelBuilder.Entity<UserProfile>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-
-            modelBuilder.Entity<MediaItem>()
-                .HasOne(m => m.User)
-                .WithMany(u => u.MediaItems)
-                .HasForeignKey(m => m.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<MediaItem>()
-                .HasOne(m => m.Category)
-                .WithMany(c => c.MediaItems)
-                .HasForeignKey(m => m.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Playlist>()
                 .HasOne(p => p.User)
@@ -60,10 +46,10 @@ namespace Omni.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<PlaylistItem>()
-                .HasOne(pi => pi.MediaItem)
-                .WithMany(m => m.PlaylistItems)
-                .HasForeignKey(pi => pi.MediaId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(pi => pi.Category)
+                .WithMany(c => c.Items)
+                .HasForeignKey(pi => pi.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Favourite>()
                 .HasOne(f => f.User)
@@ -72,13 +58,13 @@ namespace Omni.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Favourite>()
-                .HasOne(f => f.MediaItem)
-                .WithMany(m => m.Favourites)
-                .HasForeignKey(f => f.MediaId)
+                .HasOne(f => f.PlaylistItem)
+                .WithMany()
+                .HasForeignKey(f => f.PlaylistItemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Favourite>()
-                .HasIndex(f => new { f.UserId, f.MediaId })
+                .HasIndex(f => new { f.UserId, f.PlaylistItemId })
                 .IsUnique();
 
             modelBuilder.Entity<LaunchHistory>()
@@ -88,9 +74,9 @@ namespace Omni.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LaunchHistory>()
-                .HasOne(h => h.MediaItem)
-                .WithMany(m => m.LaunchHistory)
-                .HasForeignKey(h => h.MediaId)
+                .HasOne(h => h.PlaylistItem)
+                .WithMany()
+                .HasForeignKey(h => h.PlaylistItemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Category>().HasData(

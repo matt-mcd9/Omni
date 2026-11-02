@@ -7,6 +7,6 @@ namespace Omni.Models
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
 
-        public List<MediaItem> MediaItems { get; set; } = new();
+        public List<PlaylistItem> Items { get; set; } = new();
     }
 }

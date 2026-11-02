@@ -8,25 +8,25 @@ namespace Omni.Data
 {
     public class OmniService
     {
-        public bool AddFavourite(int userId, int mediaId)
+        public bool AddFavourite(int userId, int playlistItemId)
         {
             using var db = new OmniDbContext();
 
             bool alreadyExists = db.Favourites
-                .Any(f => f.UserId == userId && f.MediaId == mediaId);
+                .Any(f => f.UserId == userId && f.PlaylistItemId == playlistItemId);
             if (alreadyExists) return false;
 
-            db.Favourites.Add(new Favourite { UserId = userId, MediaId = mediaId });
+            db.Favourites.Add(new Favourite { UserId = userId, PlaylistItemId = playlistItemId });
             db.SaveChanges();
             return true;
         }
 
-        public bool RemoveFavourite(int userId, int mediaId)
+        public bool RemoveFavourite(int userId, int playlistItemId)
         {
             using var db = new OmniDbContext();
 
             var fav = db.Favourites
-                .FirstOrDefault(f => f.UserId == userId && f.MediaId == mediaId);
+                .FirstOrDefault(f => f.UserId == userId && f.PlaylistItemId == playlistItemId);
             if (fav is null) return false;
 
             db.Favourites.Remove(fav);
@@ -34,67 +34,83 @@ namespace Omni.Data
             return true;
         }
 
-        public bool IsFavourite(int userId, int mediaId)
+        public bool IsFavourite(int userId, int playlistItemId)
         {
             using var db = new OmniDbContext();
-            return db.Favourites.Any(f => f.UserId == userId && f.MediaId == mediaId);
+            return db.Favourites.Any(f => f.UserId == userId && f.PlaylistItemId == playlistItemId);
         }
 
-        public List<MediaItem> GetFavourites(int userId)
+        public List<PlaylistItem> GetFavourites(int userId)
         {
             using var db = new OmniDbContext();
             return db.Favourites
                 .Where(f => f.UserId == userId)
-                .Include(f => f.MediaItem)
-                .Select(f => f.MediaItem!)
+                .Include(f => f.PlaylistItem)
+                .Select(f => f.PlaylistItem!)
                 .ToList();
         }
 
-        public void RecordLaunch(int userId, int mediaId)
+        public void RecordLaunch(int userId, int playlistItemId)
         {
             using var db = new OmniDbContext();
             db.LaunchHistory.Add(new LaunchHistory
             {
                 UserId = userId,
-                MediaId = mediaId,
+                PlaylistItemId = playlistItemId,
                 LaunchedDate = DateTime.Now
             });
             db.SaveChanges();
         }
         // Records a launch for pages that only know the file path.
-        // Does nothing if the file was never saved to MediaItems by a folder scan.
+        // Does nothing if the file was never saved to PlaylistItems by a folder scan.
         public void RecordLaunchByPath(int userId, string filePath)
         {
             using var db = new OmniDbContext();
 
-            // Find the saved MediaItem for this file, since LaunchHistory needs its MediaId
-            var item = db.MediaItems.FirstOrDefault(m => m.UserId == userId && m.FilePath == filePath);
+            // Find the saved PlaylistItem for this file, since LaunchHistory needs its PlaylistItemId
+            var item = db.PlaylistItems.FirstOrDefault(i => i.Playlist!.UserId == userId && i.FilePath == filePath);
             if (item is null) return;
 
             // Same as RecordLaunch: one history row per launch, stamped with the current time
             db.LaunchHistory.Add(new LaunchHistory
             {
                 UserId = userId,
-                MediaId = item.MediaId,
+                PlaylistItemId = item.PlaylistItemId,
                 LaunchedDate = DateTime.Now
             });
             db.SaveChanges();
         }
-        // Saves the items a page found in a folder scan as MediaItems.
+
+        // Each user has one playlist, created the first time it's needed
+        private static Playlist GetOrCreateLibrary(OmniDbContext db, int userId)
+        {
+            var playlist = db.Playlists.FirstOrDefault(p => p.UserId == userId);
+            if (playlist is not null) return playlist;
+
+            playlist = new Playlist { UserId = userId, PlaylistName = "Library" };
+            db.Playlists.Add(playlist);
+            db.SaveChanges();
+            return playlist;
+        }
+
+        // Saves the items a page found in a folder scan as PlaylistItems.
         // Files already in the database (same path) are skipped, so scanning
         // the same folder twice doesn't add duplicates.
         public int SaveLibraryItems(int userId, int categoryId, string mediaType, ArrayList found)
         {
             // A new short-lived DbContext, same pattern as the other methods
             using var db = new OmniDbContext();
+            var playlist = GetOrCreateLibrary(db, userId);
 
             // Paths this user already has saved in this category.
             // A HashSet makes "is this path already saved?" a fast check.
-            var existingPaths = db.MediaItems
-                .Where(m => m.UserId == userId && m.CategoryId == categoryId)
-                .Select(m => m.FilePath)
+            var existingPaths = db.PlaylistItems
+                .Where(i => i.PlaylistId == playlist.PlaylistId && i.CategoryId == categoryId)
+                .Select(i => i.FilePath)
                 .ToHashSet();
 
+            // New items go after whatever is already in the playlist
+            int position = db.PlaylistItems.Count(i => i.PlaylistId == playlist.PlaylistId);
             int added = 0;
             foreach (SoftwarePage.AppEntry entry in found)
             {
@@ -103,13 +119,14 @@ namespace Omni.Data
                 if (!existingPaths.Add(entry.FullPath)) continue;
 
                 // Queue a new row; nothing is written until SaveChanges below
-                db.MediaItems.Add(new MediaItem
+                db.PlaylistItems.Add(new PlaylistItem
                 {
-                    UserId = userId,
+                    PlaylistId = playlist.PlaylistId,
                     Title = entry.Name,
                     FilePath = entry.FullPath,
                     MediaType = mediaType,
-                    CategoryId = categoryId
+                    CategoryId = categoryId,
+                    Position = position++
                 });
                 added++;
             }
@@ -119,12 +136,12 @@ namespace Omni.Data
             return added;
         }
 
-        // Number of media items per CategoryId
+        // Number of playlist items per CategoryId
         public Dictionary<int, int> GetCategoryCounts()
         {
             using var db = new OmniDbContext();
-            return db.MediaItems
-                .GroupBy(m => m.CategoryId)
+            return db.PlaylistItems
+                .GroupBy(i => i.CategoryId)
                 .Select(g => new { g.Key, Count = g.Count() })
                 .ToDictionary(x => x.Key, x => x.Count);
         }
@@ -134,7 +151,7 @@ namespace Omni.Data
             using var db = new OmniDbContext();
             return db.LaunchHistory
                 .Where(h => h.UserId == userId)
-                .Include(h => h.MediaItem)
+                .Include(h => h.PlaylistItem)
                 .OrderByDescending(h => h.LaunchedDate)
                 .Take(count)
                 .ToList();

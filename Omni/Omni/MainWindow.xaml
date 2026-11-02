@@ -52,8 +52,6 @@
                                      Style="{StaticResource NavButtonStyle}" Checked="Nav_Checked"/>
                         <RadioButton x:Name="NavSoftware" Content="Software" Tag="&#x1F4E6;"
                                      Style="{StaticResource NavButtonStyle}" Checked="Nav_Checked"/>
-                        <RadioButton x:Name="NavPlaylists" Content="Playlists" Tag="&#x1F4CB;"
-                                     Style="{StaticResource NavButtonStyle}" Checked="Nav_Checked"/>
                         <RadioButton x:Name="NavSettings" Content="Settings" Tag="&#x2699;"
                                      Style="{StaticResource NavButtonStyle}" Checked="Nav_Checked"/>
                     </StackPanel>

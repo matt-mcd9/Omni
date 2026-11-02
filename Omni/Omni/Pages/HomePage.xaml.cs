@@ -19,21 +19,18 @@ namespace Omni.Pages
         // Category ids seeded in OmniDbContext
         private const int MusicCategory = 1, VideoCategory = 2, GameCategory = 3, SoftwareCategory = 4;
 
+        // Placeholder: replace with the current user's name once the database work is merged
+        private const string PlaceholderUsername = "User 1";
+
         private readonly OmniService _service = new();
 
         public HomePage()
         {
             InitializeComponent();
 
-            var now = DateTime.Now;
-            GreetingText.Text = now.Hour switch
-            {
-                < 12 => "Good morning",
-                < 18 => "Good afternoon",
-                _ => "Good evening"
-            };
+            GreetingText.Text = $"Welcome back, {PlaceholderUsername}";
             // English like the rest of the UI, regardless of the Windows language
-            DateText.Text = now.ToString("dddd, d MMMM", CultureInfo.GetCultureInfo("en-GB"));
+            DateText.Text = DateTime.Now.ToString("dddd, d MMMM", CultureInfo.GetCultureInfo("en-GB"));
 
             LoadLibraryCounts();
 

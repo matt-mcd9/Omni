@@ -19,4 +19,9 @@
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Idle placeholder shown in the Videos page player -->
+    <Resource Include="Pictures\ColorBars.png" />
+  </ItemGroup>
+
 </Project>

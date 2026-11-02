@@ -68,15 +68,6 @@
         </StackPanel>
         <Slider Width="150" Margin="752,20,126,-9" Grid.Row="2" TickFrequency="10" IsSnapToTickEnabled="True" Maximum="100" Minimum="0" ValueChanged="VolumeSet" Grid.RowSpan="2" />
         <ProgressBar Height="10" Width="500" Margin="264,5,264,14" Grid.Row="2"/>
-        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="250">
-            <TextBox x:Name="searchVideos" Height="28" Margin="0,0,0,8"
-                     TextChanged="searchVideos_TextChanged"/>
-            <Button Height="30" Content="Select Folder" Click="selectVideoFolder_Click"/>
-            <ListBox x:Name="listVideos" Height="300" Margin="0,8,0,0"
-                     Background="{DynamicResource SidebarBrush}"
-                     Foreground="{DynamicResource TextBrush}"
-                     MouseDoubleClick="playVideo_MouseDoubleClick"/>
-        </StackPanel>
 
 
     </Grid>

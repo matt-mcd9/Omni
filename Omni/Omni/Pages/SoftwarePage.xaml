@@ -4,14 +4,7 @@
     <StackPanel>
         <TextBlock Text="Software" Foreground="{DynamicResource TextBrush}"
                    FontSize="26" FontWeight="Bold"/>
-        
-        <TextBox x:Name="searchBox"
-                 Width="400" Height="28" HorizontalAlignment="Left" Margin="0,8,0,8"
-                 Background="{DynamicResource SidebarBrush}"
-                 Foreground="{DynamicResource TextBrush}"
-                 BorderBrush="{DynamicResource BorderBrush}"
-                 TextChanged="searchBox_TextChanged"/>
-        
+
         <Button Width="100"
                 Height="50"
                 HorizontalAlignment="Left"

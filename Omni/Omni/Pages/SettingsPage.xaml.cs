@@ -11,6 +11,10 @@ namespace Omni.Pages
         // Custom background until the user has picked their own colours
         private static readonly Color DefaultCustomBackground = Color.FromRgb(0x1E, 0x3A, 0x5F);
 
+        // Placeholder: choosing a user does nothing yet. Once the database work is
+        // merged, load the real users here and switch the current user on selection.
+        private static readonly string[] PlaceholderUsers = { "User 1", "User 2" };
+
         // Suppresses Theme_Checked while the page selects a tile itself
         private bool _syncing;
         // Saving to disk is debounced so dragging a slider doesn't write every tick
@@ -21,6 +25,9 @@ namespace Omni.Pages
         public SettingsPage()
         {
             InitializeComponent();
+
+            UserPicker.ItemsSource = PlaceholderUsers;
+            UserPicker.SelectedIndex = 0;
 
             _saveTimer.Tick += (_, _) => FlushSave();
             // Flush a pending save when leaving the page

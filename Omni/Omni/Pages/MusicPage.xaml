@@ -121,9 +121,9 @@
                         </Button>
                     </Grid>
 
-                    <Button DockPanel.Dock="Top" Margin="2,0,0,8" HorizontalAlignment="Stretch"
+                    <Button DockPanel.Dock="Top" Margin="2,0,0,8"
                             Style="{StaticResource OutlineButtonStyle}" Click="AddSongs_Click"
-                            ToolTip="Add songs to the playlist">
+                            ToolTip="Add songs to the playlist" Height="29">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE710;" Style="{StaticResource IconStyle}" FontSize="13"
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>

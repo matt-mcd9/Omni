@@ -47,12 +47,92 @@
             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>    </UserControl.Resources>
+        </Style>
+
+        <!-- Drop-down rows in the user picker -->
+        <Style x:Key="UserItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="10,7">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- User picker; replaces the default ComboBox look, which ignores the theme -->
+        <Style x:Key="UserComboStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource UserItemStyle}"/>
+            <Setter Property="Width" Value="240"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Box" Background="{DynamicResource SidebarBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                CornerRadius="8" Padding="12,8">
+                                            <TextBlock Text="&#xE70D;" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter Margin="13,9,32,9" IsHitTestVisible="False" VerticalAlignment="Center"
+                                              Content="{TemplateBinding SelectionBoxItem}"/>
+
+                            <Popup Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade"
+                                   VerticalOffset="4" IsOpen="{TemplateBinding IsDropDownOpen}">
+                                <Border Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        Background="{DynamicResource SidebarBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="4">
+                                    <ItemsPresenter/>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel>
             <TextBlock Text="Settings" Foreground="{DynamicResource TextBrush}"
                        FontSize="26" FontWeight="Bold" Margin="0,0,0,24"/>
+
+            <!-- ===== User ===== -->
+            <TextBlock Text="User" Style="{StaticResource SectionHeaderStyle}"/>
+            <TextBlock Text="Switching users isn't available yet."
+                       Style="{StaticResource HintStyle}" Margin="0,0,0,14"/>
+            <ComboBox x:Name="UserPicker" Style="{StaticResource UserComboStyle}" Margin="0,0,0,28"/>
 
             <!-- ===== Appearance ===== -->
             <TextBlock Text="Appearance" Style="{StaticResource SectionHeaderStyle}"/>

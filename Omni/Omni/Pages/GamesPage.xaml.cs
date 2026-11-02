@@ -8,7 +8,7 @@ namespace Omni.Pages
 {
     public partial class GamesPage : UserControl
     {
-        
+        String[] exeFileTypes;
         List<String> hasGameExe = new List<String>();
         String[] fileTypes;
         public GamesPage()
@@ -39,18 +39,46 @@ namespace Omni.Pages
             String folderName = dialog.FolderName;
 
             if (Directory.Exists(folderName)) {
-                fileTypes = Directory.GetFiles(folderName, "*.exe", SearchOption.AllDirectories);
+                fileTypes = Directory.GetFiles(folderName, "*.lnk", SearchOption.AllDirectories);
 
 
                 foreach (String file in fileTypes) {
+                    Debug.WriteLine(file);
                     hasGameExe.Add(file);
                     String results = System.IO.Path.GetFileNameWithoutExtension(file);
                     listGames.Items.Add(results);
 
                 }
+                scanExeFiles(folderName);
             }
         
         
+        }
+
+
+        private void scanExeFiles(string exePath, int depth = 0) {
+            int maxDepth = 2;
+            if (Directory.Exists(exePath)) {
+                fileTypes = Directory.GetFiles(exePath, "*.exe", SearchOption.TopDirectoryOnly);
+
+                foreach (String file in fileTypes) {
+                    hasGameExe.Add(file);
+                    String results = Path.GetFileNameWithoutExtension(file);
+                    listGames.Items.Add(results);
+                }
+
+                if (depth < maxDepth) {
+                    String[] subDirectory = Directory.GetDirectories(exePath);
+                    foreach (String subDir in subDirectory) {
+                        scanExeFiles(subDir, depth + 1);
+                    }
+
+
+
+
+                }
+            }
+
         }
 
 

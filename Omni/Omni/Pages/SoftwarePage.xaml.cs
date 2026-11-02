@@ -11,6 +11,8 @@ namespace Omni.Pages
 {
     public partial class SoftwarePage : UserControl
     {
+
+        String[] exeFileTypes;
         String[] fileTypes;
         List<String> hasExeFiles = new List<String>();
         public SoftwarePage()
@@ -33,6 +35,7 @@ namespace Omni.Pages
 
         }
 
+        //YOU NEED TO ADD EXCEPTION HANDLING HERE. WHAT HAPPENS IF NO DIRECTORY?
         private void selectFolder_Click(object sender, EventArgs e) {
             hasExeFiles.Clear();
             listApplications.Items.Clear();
@@ -43,24 +46,44 @@ namespace Omni.Pages
 
             if (Directory.Exists(folderName)) {
 
-                fileTypes = Directory.GetFiles(folderName, "*", SearchOption.AllDirectories);
+                fileTypes = Directory.GetFiles(folderName, "*.lnk", SearchOption.AllDirectories);
 
                 foreach (String file in fileTypes) {
-
-                    String fileType = Path.GetExtension(file);
-                    if (fileType == ".lnk" || fileType == ".exe") {
                         hasExeFiles.Add(file);
                         String results = System.IO.Path.GetFileNameWithoutExtension(file);
                         listApplications.Items.Add(results);
-
-                    }
-
-
                 }
+                scanExeFiles(folderName);
 
             }
 
 
+        }
+
+        //Separate method to stop from scanning too far into subdirectories 
+        private void scanExeFiles(string exePath, int depth = 0) {
+            int maxDepth = 2;
+            if (Directory.Exists(exePath)) { 
+                exeFileTypes = Directory.GetFiles(exePath, "*.exe", SearchOption.TopDirectoryOnly);
+
+                foreach(String file in exeFileTypes) {
+                    hasExeFiles.Add(file);
+                    String results = Path.GetFileNameWithoutExtension(file);
+                    listApplications.Items.Add(results);
+                }
+
+                if (depth < maxDepth) {
+                    String[] subDirectory = Directory.GetDirectories(exePath);
+                    foreach (String subDir in subDirectory) {
+                        scanExeFiles(subDir, depth + 1);
+                    }
+
+                    
+                    
+                    
+                }
+            }
+        
         }
 
     }

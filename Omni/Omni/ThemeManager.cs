@@ -64,8 +64,19 @@ namespace Omni
 
             Apply(theme, save: false);
             _savedContent = SettingsContent();
+            
         }
+        
+        // Applies the theme stored for this user in the database, if there is one
+        public static void LoadFromDatabase(int userId)
+        {
+            string? theme = new Omni.Data.OmniService().GetTheme(userId);
+            if (string.IsNullOrWhiteSpace(theme)) return;
 
+            Apply(theme, save: false);
+            _savedContent = null;
+        }
+        
         public static void Apply(string theme, bool save = true)
         {
             Color bg, text;
@@ -98,6 +109,8 @@ namespace Omni
             }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
+
+            new Omni.Data.OmniService().SaveTheme(Omni.Data.OmniService.CurrentUserId, CurrentTheme);   // ← add this line
         }
 
         private static string SettingsContent() =>

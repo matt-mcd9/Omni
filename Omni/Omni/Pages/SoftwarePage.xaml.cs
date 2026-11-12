@@ -6,11 +6,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shapes;
 using Path = System.IO.Path;
+using Omni.Data;
 
 namespace Omni.Pages
 {
     public partial class SoftwarePage : UserControl
     {
+        private readonly OmniService _service = new();
 
         String[] exeFileTypes;
         String[] fileTypes;
@@ -18,6 +20,12 @@ namespace Omni.Pages
         public SoftwarePage()
         {
             InitializeComponent();
+            
+            foreach (string path in _service.GetSoftwarePaths(OmniService.CurrentUserId).Where(File.Exists))
+            {
+                hasExeFiles.Add(path);
+                listApplications.Items.Add(Path.GetFileNameWithoutExtension(path));
+            }
         }
 
         //click event for launching (find item, match to full path, double click to launch)
@@ -56,7 +64,7 @@ namespace Omni.Pages
                 scanExeFiles(folderName);
 
             }
-
+            _service.SaveScannedSoftware(OmniService.CurrentUserId, hasExeFiles);
 
         }
 

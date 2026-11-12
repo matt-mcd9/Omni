@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media.Imaging;
+using Omni.Data;
 
 namespace Omni.Pages
 {
@@ -15,6 +16,7 @@ namespace Omni.Pages
 
     public partial class MusicPage : UserControl
     {
+        private readonly OmniService _service = new();
 
         private const string PlayGlyph = "";
         private const string PauseGlyph = "";
@@ -48,9 +50,11 @@ namespace Omni.Pages
             _mediaPlayer.Stopped += OnStopped;
             _mediaPlayer.TimeChanged += OnTimeChanged;
             _mediaPlayer.LengthChanged += OnLengthChanged;
-
+            
             PlaylistList.ItemsSource = _songs;
+            _storedPlaylistPaths.Clear();                                     
             AddSongs(LoadPlaylistPaths());
+            AddSongs(_service.GetMusicPaths(OmniService.CurrentUserId).Where(File.Exists));   
         }
 
         // ----- Player events (marshalled to the UI thread) -----
@@ -184,12 +188,20 @@ namespace Omni.Pages
                 var (title, details) = ReadTrackInfo(path);
                 _songs.Add(new PlaylistSong(title, details, path));
             }
+            _service.SaveScannedMusic(OmniService.CurrentUserId, paths);
             PlaylistChanged();
+        }
+        private void AddSongs_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog { Filter = "Audio Files|*.mp3", Multiselect = true };
+            if (dialog.ShowDialog() == true)
+                AddSongs(dialog.FileNames);
         }
 
         private void RemoveSong(PlaylistSong song)
         {
             _songs.Remove(song);
+            _service.RemoveMusic(OmniService.CurrentUserId, song.Path); 
             PlaylistChanged();
         }
 
@@ -227,12 +239,7 @@ namespace Omni.Pages
             _mediaPlayer?.Play(media);
         }
 
-        private void AddSongs_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog { Filter = "Audio Files|*.mp3", Multiselect = true };
-            if (dialog.ShowDialog() == true)
-                AddSongs(dialog.FileNames);
-        }
+       
 
         private void Song_MouseUp(object sender, MouseButtonEventArgs e)
         {

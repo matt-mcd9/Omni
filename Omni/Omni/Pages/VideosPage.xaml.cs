@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using LibVLCSharp.Shared;
 using Microsoft.Win32;
+using Omni.Data;
 
 namespace Omni.Pages
 {
@@ -21,7 +22,9 @@ namespace Omni.Pages
             ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".m4v",
             ".flv", ".mpg", ".mpeg", ".ts", ".m2ts", ".3gp",
         };
-
+        
+        private readonly OmniService _service = new();
+        
         private const string PlayGlyph = "";
         private const string PauseGlyph = "";
 
@@ -37,6 +40,18 @@ namespace Omni.Pages
         public VideosPage()
         {
             InitializeComponent();
+            
+            var saved = _service.GetVideoPaths(OmniService.CurrentUserId)
+                .Where(File.Exists)
+                .Select(p => ToVideoFile(Path.GetDirectoryName(p)!, p))
+                .ToList();
+            if (saved.Count > 0)
+            {
+                VideoList.ItemsSource = saved;
+                StatusText.Text = saved.Count == 1 ? "1 video" : $"{saved.Count} videos";
+                StatusText.Visibility = Visibility.Visible;
+                EmptyText.Visibility = Visibility.Collapsed;
+            }
 
             Loaded += VideosPage_Loaded;
         }
@@ -102,7 +117,9 @@ namespace Omni.Pages
                 StatusText.Text = "Couldn't read this folder.";
                 return;
             }
-
+            
+            await Task.Run(() => _service.SaveScannedVideos(OmniService.CurrentUserId, videos.Select(v => v.Path).ToList()));
+            
             VideoList.ItemsSource = videos;
             StatusText.Text = videos.Count == 1 ? "1 video" : $"{videos.Count} videos";
             if (videos.Count == 0)

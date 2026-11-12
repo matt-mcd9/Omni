@@ -98,5 +98,105 @@ namespace Omni.Data
         }
         
         public record LibraryItem(string Type, int Id, string Title, string FilePath);
+        
+        // scans are saved to user 1. Set to 2 to save to user 2.
+        public static int CurrentUserId { get; set; } = 1;
+
+        public int SaveScannedMusic(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Music.Where(m => m.UserId == userId).Select(m => m.FilePath));
+            var added = NewPaths(paths, known).Select(p => new Music { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
+            db.Music.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        public int SaveScannedVideos(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Videos.Where(v => v.UserId == userId).Select(v => v.FilePath));
+            var added = NewPaths(paths, known).Select(p => new Video { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
+            db.Videos.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        public int SaveScannedGames(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Games.Where(g => g.UserId == userId).Select(g => g.FilePath));
+            var added = NewPaths(paths, known).Select(p => new Game { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
+            db.Games.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        public int SaveScannedSoftware(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Software.Where(s => s.UserId == userId).Select(s => s.FilePath));
+            var added = NewPaths(paths, known).Select(p => new Software { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
+            db.Software.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+        
+        public void SaveTheme(int userId, string theme)
+        {
+            using var db = new OmniDbContext();
+            var user = db.UserProfiles.Find(userId);
+            if (user is null) return;
+
+            user.Theme = theme;
+            db.SaveChanges();
+        }
+        
+        public string? GetTheme(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.UserProfiles
+                .Where(u => u.UserId == userId)
+                .Select(u => u.Theme)
+                .FirstOrDefault();
+        }
+        
+        private static HashSet<string> KnownPaths(IQueryable<string> paths) =>
+            new(paths.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        private static IEnumerable<string> NewPaths(IEnumerable<string> paths, HashSet<string> known) =>
+            paths.Where(p => known.Add(p));
+
+        private static string TitleOf(string path) => System.IO.Path.GetFileNameWithoutExtension(path);
+        
+        public List<string> GetMusicPaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Music.Where(m => m.UserId == userId).OrderBy(m => m.Title).Select(m => m.FilePath).ToList();
+        }
+
+        public List<string> GetVideoPaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Videos.Where(v => v.UserId == userId).OrderBy(v => v.Title).Select(v => v.FilePath).ToList();
+        }
+
+        public List<string> GetGamePaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Games.Where(g => g.UserId == userId).OrderBy(g => g.Title).Select(g => g.FilePath).ToList();
+        }
+
+        public List<string> GetSoftwarePaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Software.Where(s => s.UserId == userId).OrderBy(s => s.Title).Select(s => s.FilePath).ToList();
+        }
+
+        public void RemoveMusic(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Music.Where(m => m.UserId == userId && m.FilePath == path).ExecuteDelete();
+        }
     }
 }

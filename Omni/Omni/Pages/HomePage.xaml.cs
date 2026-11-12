@@ -15,7 +15,6 @@ namespace Omni.Pages
 
     public partial class HomePage : UserControl
     {
-
         // Placeholder: replace with the current user's name once the database work is merged
         private const string PlaceholderUsername = "User 1";
 

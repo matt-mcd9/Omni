@@ -3,17 +3,26 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Omni.Data;
 
 namespace Omni.Pages
 {
+    
     public partial class GamesPage : UserControl
     {
         String[] exeFileTypes;
         List<String> hasGameExe = new List<String>();
         String[] fileTypes;
+        private readonly OmniService _service = new();
         public GamesPage()
         {
             InitializeComponent();
+            
+            foreach (string path in _service.GetGamePaths(OmniService.CurrentUserId).Where(File.Exists))
+            {
+                hasGameExe.Add(path);
+                listGames.Items.Add(Path.GetFileNameWithoutExtension(path));
+            }
         }
 
         private void launchGame_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
@@ -51,6 +60,7 @@ namespace Omni.Pages
                 }
                 scanExeFiles(folderName);
             }
+            _service.SaveScannedGames(OmniService.CurrentUserId, hasGameExe);
         
         
         }

@@ -9,7 +9,10 @@ namespace Omni.Models
         public string Theme { get; set; } = "Dark";
         public string LayoutPreference { get; set; } = "Grid";
 
-        public List<MediaItem> MediaItems { get; set; } = new();
+        public List<Music> Music { get; set; } = new();
+        public List<Video> Videos { get; set; } = new();
+        public List<Game> Games { get; set; } = new();
+        public List<Software> Software { get; set; } = new();
         public List<Playlist> Playlists { get; set; } = new();
         public List<Favourite> Favourites { get; set; } = new();
         public List<LaunchHistory> LaunchHistory { get; set; } = new();

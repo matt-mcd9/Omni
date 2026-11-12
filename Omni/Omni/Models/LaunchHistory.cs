@@ -6,10 +6,9 @@ namespace Omni.Models
     {
         public int HistoryId { get; set; }
         public int UserId { get; set; }
-        public int MediaId { get; set; }
         public DateTime LaunchedDate { get; set; }
 
         public UserProfile? User { get; set; }
-        public MediaItem? MediaItem { get; set; }
-    }
+        public string MediaType { get; set; } = string.Empty;
+        public int ItemId { get; set; }    }
 }

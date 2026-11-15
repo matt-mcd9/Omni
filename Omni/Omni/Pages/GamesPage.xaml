@@ -36,18 +36,20 @@
             </Setter>
         </Style>
 
-        <!-- List item style -->
+        <!-- Tile style: a big icon with the name underneath, like File Explorer -->
         <Style x:Key="GameItemStyle" TargetType="ListBoxItem">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
+            <Setter Property="Width" Value="108"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="VerticalContentAlignment" Value="Top"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Bg"
                                 Background="Transparent"
                                 CornerRadius="6"
-                                Padding="10,7">
+                                Padding="6,10,6,8">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -124,27 +126,31 @@
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              MouseDoubleClick="launchGame_MouseDoubleClick">
 
+                        <!-- Tiles flow left to right and wrap onto new rows -->
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
+                                <StackPanel ToolTip="{Binding}">
                                     <TextBlock Text="&#xE7FC;"
                                                Style="{StaticResource IconStyle}"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
+                                               FontSize="44"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,8"/>
 
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding}"
-                                                   FontSize="13"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextBrush}"/>
-                                    </StackPanel>
-                                </Grid>
+                                    <!-- Up to two lines, then an ellipsis; the tooltip has the full name -->
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="12"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxHeight="32"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

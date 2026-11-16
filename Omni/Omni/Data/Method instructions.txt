@@ -1,0 +1,35 @@
+How to use the OmniService class methods:
+
+
+// Music
+service.AddMusic(userId, @"C:\Music\song.mp3");
+List<string> music = service.GetMusicPaths(userId);
+service.RemoveMusic(userId, @"C:\Music\song.mp3");
+
+// Scan folders/files
+int added = service.SaveScannedMusic(userId, musicPaths);
+
+// Favourites
+service.AddFavourite(userId, "Music", musicId);
+bool favourite = service.IsFavourite(userId, "Music", musicId);
+service.RemoveFavourite(userId, "Music", musicId);
+
+// Themes
+service.SaveTheme(userId, "Dark");
+string? theme = service.GetTheme(userId);
+
+// Launch history
+service.RecordLaunch(userId, "Music", musicId);
+var history = service.GetRecentHistory(userId);
+
+// Users
+var users = service.GetAllUsers();
+service.AddUser(3);
+service.RemoveUser(3);
+In a WPF page, the usual pattern is a field:
+private readonly OmniService _service = new();
+
+private void LoadMusic()
+{
+    var paths = _service.GetMusicPaths(OmniService.CurrentUserId);
+}

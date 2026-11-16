@@ -9,6 +9,16 @@ namespace Omni.Data
 {
     public class OmniService
     {
+        //-------------------------------------------------------------------------------------------------------------//
+        // Shared model and user state
+        public record LibraryItem(string Type, int Id, string Title, string FilePath);
+
+        // Scans are saved to the current user.
+        public static int CurrentUserId { get; set; } = 1;
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Favourite management
+        // Adds a media item to the user's favourites if it is not already there.
         public bool AddFavourite(int userId, string mediaType, int itemId)
         {
             using var db = new OmniDbContext();
@@ -22,6 +32,7 @@ namespace Omni.Data
             return true;
         }
 
+        // Removes a media item from the user's favourites.
         public bool RemoveFavourite(int userId, string mediaType, int itemId)
         {
             using var db = new OmniDbContext();
@@ -35,12 +46,14 @@ namespace Omni.Data
             return true;
         }
 
+        // Checks whether a media item is in the user's favourites.
         public bool IsFavourite(int userId, string mediaType, int itemId)
         {
             using var db = new OmniDbContext();
             return db.Favourites.Any(f => f.UserId == userId && f.MediaType == mediaType && f.ItemId == itemId);
         }
 
+        // Gets the user's favourites and resolves them to their library items.
         public List<LibraryItem> GetFavourites(int userId)
         {
             using var db = new OmniDbContext();
@@ -48,33 +61,13 @@ namespace Omni.Data
 
             return favourites
                 .Select(f => FindItem(db, f.MediaType, f.ItemId))
-                .OfType<LibraryItem>() // skips items that were deleted
+                .OfType<LibraryItem>()
                 .ToList();
         }
 
-// Looks the item up in the table MediaType points to
-        private static LibraryItem? FindItem(OmniDbContext db, string type, int id) => type switch
-        {
-            "Music"    => db.Music.Find(id)    is { } m ? new LibraryItem(type, m.MusicId, m.Title, m.FilePath) : null,
-            "Video"    => db.Videos.Find(id)   is { } v ? new LibraryItem(type, v.VideoId, v.Title, v.FilePath) : null,
-            "Game"     => db.Games.Find(id)    is { } g ? new LibraryItem(type, g.GameId, g.Title, g.FilePath) : null,
-            "Software" => db.Software.Find(id) is { } s ? new LibraryItem(type, s.SoftwareId, s.Title, s.FilePath) : null,
-            _ => null
-        };
-
-        public void RecordLaunch(int userId, string mediaType, int itemId)
-        {
-            using var db = new OmniDbContext();
-            db.LaunchHistory.Add(new LaunchHistory
-            {
-                UserId = userId,
-                MediaType = mediaType,
-                ItemId = itemId,                
-                LaunchedDate = DateTime.Now
-            });
-            db.SaveChanges();
-        }
-
+        //-------------------------------------------------------------------------------------------------------------//
+        // Library overview
+        // Gets the number of items stored in each library.
         public Dictionary<string, int> GetLibraryCounts()
         {
             using var db = new OmniDbContext();
@@ -87,6 +80,191 @@ namespace Omni.Data
             };
         }
 
+        //-------------------------------------------------------------------------------------------------------------//
+        // Music management
+        // Gets the user's music file paths ordered by title.
+        public List<string> GetMusicPaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Music
+                .Where(m => m.UserId == userId)
+                .OrderBy(m => m.Title)
+                .Select(m => m.FilePath)
+                .ToList();
+        }
+
+        // Adds a music file to the user's library.
+        public void AddMusic(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Music.Add(new Music { UserId = userId, Title = TitleOf(path), FilePath = path });
+            db.SaveChanges();
+        }
+
+        // Removes a music file from the user's library.
+        public void RemoveMusic(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Music.Where(m => m.UserId == userId && m.FilePath == path).ExecuteDelete();
+            db.SaveChanges();
+        }
+
+        // Adds new scanned music files that are not already in the user's library.
+        public int SaveScannedMusic(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Music.Where(m => m.UserId == userId).Select(m => m.FilePath));
+            var added = NewPaths(paths, known)
+                .Select(p => new Music { UserId = userId, Title = TitleOf(p), FilePath = p })
+                .ToList();
+            db.Music.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Video management
+        // Gets the user's video file paths ordered by title.
+        public List<string> GetVideoPaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Videos
+                .Where(v => v.UserId == userId)
+                .OrderBy(v => v.Title)
+                .Select(v => v.FilePath)
+                .ToList();
+        }
+
+        // Adds a video file to the user's library.
+        public void AddVideo(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Videos.Add(new Video { UserId = userId, Title = TitleOf(path), FilePath = path });
+            db.SaveChanges();
+        }
+
+        // Removes a video file from the user's library.
+        public void RemoveVideo(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Videos.Where(v => v.UserId == userId && v.FilePath == path).ExecuteDelete();
+            db.SaveChanges();
+        }
+
+        // Adds new scanned video files that are not already in the user's library.
+        public int SaveScannedVideos(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Videos.Where(v => v.UserId == userId).Select(v => v.FilePath));
+            var added = NewPaths(paths, known)
+                .Select(p => new Video { UserId = userId, Title = TitleOf(p), FilePath = p })
+                .ToList();
+            db.Videos.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Game management
+        // Gets the user's game file paths ordered by title.
+        public List<string> GetGamePaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Games
+                .Where(g => g.UserId == userId)
+                .OrderBy(g => g.Title)
+                .Select(g => g.FilePath)
+                .ToList();
+        }
+
+        // Adds a game file to the user's library.
+        public void AddGame(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Games.Add(new Game { UserId = userId, Title = TitleOf(path), FilePath = path });
+            db.SaveChanges();
+        }
+
+        // Removes a game file from the user's library.
+        public void RemoveGame(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Games.Where(g => g.UserId == userId && g.FilePath == path).ExecuteDelete();
+            db.SaveChanges();
+        }
+
+        // Adds new scanned game files that are not already in the user's library.
+        public int SaveScannedGames(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Games.Where(g => g.UserId == userId).Select(g => g.FilePath));
+            var added = NewPaths(paths, known)
+                .Select(p => new Game { UserId = userId, Title = TitleOf(p), FilePath = p })
+                .ToList();
+            db.Games.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Software management
+        // Gets the user's software file paths ordered by title.
+        public List<string> GetSoftwarePaths(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.Software
+                .Where(s => s.UserId == userId)
+                .OrderBy(s => s.Title)
+                .Select(s => s.FilePath)
+                .ToList();
+        }
+
+        // Adds a software file to the user's library.
+        public void AddSoftware(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Software.Add(new Software { UserId = userId, Title = TitleOf(path), FilePath = path });
+            db.SaveChanges();
+        }
+
+        // Removes a software file from the user's library.
+        public void RemoveSoftware(int userId, string path)
+        {
+            using var db = new OmniDbContext();
+            db.Software.Where(s => s.UserId == userId && s.FilePath == path).ExecuteDelete();
+            db.SaveChanges();
+        }
+
+        // Adds new scanned software files that are not already in the user's library.
+        public int SaveScannedSoftware(int userId, IEnumerable<string> paths)
+        {
+            using var db = new OmniDbContext();
+            var known = KnownPaths(db.Software.Where(s => s.UserId == userId).Select(s => s.FilePath));
+            var added = NewPaths(paths, known)
+                .Select(p => new Software { UserId = userId, Title = TitleOf(p), FilePath = p })
+                .ToList();
+            db.Software.AddRange(added);
+            db.SaveChanges();
+            return added.Count;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Launch history
+        // Records a media launch for the user.
+        public void RecordLaunch(int userId, string mediaType, int itemId)
+        {
+            using var db = new OmniDbContext();
+            db.LaunchHistory.Add(new LaunchHistory
+            {
+                UserId = userId,
+                MediaType = mediaType,
+                ItemId = itemId,
+                LaunchedDate = DateTime.Now
+            });
+            db.SaveChanges();
+        }
+
+        // Gets the user's most recent launch records.
         public List<LaunchHistory> GetRecentHistory(int userId, int count = 20)
         {
             using var db = new OmniDbContext();
@@ -96,52 +274,21 @@ namespace Omni.Data
                 .Take(count)
                 .ToList();
         }
-        
-        public record LibraryItem(string Type, int Id, string Title, string FilePath);
-        
-        // scans are saved to user 1. Set to 2 to save to user 2.
-        public static int CurrentUserId { get; set; } = 1;
 
-        public int SaveScannedMusic(int userId, IEnumerable<string> paths)
+        //-------------------------------------------------------------------------------------------------------------//
+        // Theme management
+        // Saves the user's layout preference.
+        public void SaveLayoutPreference(int userId, string layoutPreference)
         {
             using var db = new OmniDbContext();
-            var known = KnownPaths(db.Music.Where(m => m.UserId == userId).Select(m => m.FilePath));
-            var added = NewPaths(paths, known).Select(p => new Music { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
-            db.Music.AddRange(added);
+            var user = db.UserProfiles.Find(userId);
+            if (user is null) return;
+
+            user.LayoutPreference = layoutPreference;
             db.SaveChanges();
-            return added.Count;
         }
 
-        public int SaveScannedVideos(int userId, IEnumerable<string> paths)
-        {
-            using var db = new OmniDbContext();
-            var known = KnownPaths(db.Videos.Where(v => v.UserId == userId).Select(v => v.FilePath));
-            var added = NewPaths(paths, known).Select(p => new Video { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
-            db.Videos.AddRange(added);
-            db.SaveChanges();
-            return added.Count;
-        }
-
-        public int SaveScannedGames(int userId, IEnumerable<string> paths)
-        {
-            using var db = new OmniDbContext();
-            var known = KnownPaths(db.Games.Where(g => g.UserId == userId).Select(g => g.FilePath));
-            var added = NewPaths(paths, known).Select(p => new Game { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
-            db.Games.AddRange(added);
-            db.SaveChanges();
-            return added.Count;
-        }
-
-        public int SaveScannedSoftware(int userId, IEnumerable<string> paths)
-        {
-            using var db = new OmniDbContext();
-            var known = KnownPaths(db.Software.Where(s => s.UserId == userId).Select(s => s.FilePath));
-            var added = NewPaths(paths, known).Select(p => new Software { UserId = userId, Title = TitleOf(p), FilePath = p }).ToList();
-            db.Software.AddRange(added);
-            db.SaveChanges();
-            return added.Count;
-        }
-        
+        // Saves the user's selected theme.
         public void SaveTheme(int userId, string theme)
         {
             using var db = new OmniDbContext();
@@ -151,7 +298,8 @@ namespace Omni.Data
             user.Theme = theme;
             db.SaveChanges();
         }
-        
+
+        // Gets the theme saved for the user.
         public string? GetTheme(int userId)
         {
             using var db = new OmniDbContext();
@@ -160,43 +308,57 @@ namespace Omni.Data
                 .Select(u => u.Theme)
                 .FirstOrDefault();
         }
-        
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // User management
+        // Gets all user profiles.
+        public List<UserProfile> GetAllUsers()
+        {
+            using var db = new OmniDbContext();
+            return db.UserProfiles.ToList();
+        }
+
+        // Adds a user profile with the specified ID.
+        public void AddUser(int userId)
+        {
+            using var db = new OmniDbContext();
+            db.UserProfiles.Add(new UserProfile { UserId = userId });
+            db.SaveChanges();
+        }
+
+        // Removes a user and all of the user's library records.
+        public void RemoveUser(int userId)
+        {
+            using var db = new OmniDbContext();
+            db.UserProfiles.Where(u => u.UserId == userId).ExecuteDelete();
+            db.Music.Where(m => m.UserId == userId).ExecuteDelete();
+            db.Videos.Where(v => v.UserId == userId).ExecuteDelete();
+            db.Games.Where(g => g.UserId == userId).ExecuteDelete();
+            db.Software.Where(s => s.UserId == userId).ExecuteDelete();
+            db.SaveChanges();
+        }
+
+        //-------------------------------------------------------------------------------------------------------------//
+        // Private helper methods for scanning and saving new media items
+        // Resolves a favourite's media type and ID to the corresponding library item.
+        private static LibraryItem? FindItem(OmniDbContext db, string type, int id) => type switch
+        {
+            "Music" => db.Music.Find(id) is { } m ? new LibraryItem(type, m.MusicId, m.Title, m.FilePath) : null,
+            "Video" => db.Videos.Find(id) is { } v ? new LibraryItem(type, v.VideoId, v.Title, v.FilePath) : null,
+            "Game" => db.Games.Find(id) is { } g ? new LibraryItem(type, g.GameId, g.Title, g.FilePath) : null,
+            "Software" => db.Software.Find(id) is { } s ? new LibraryItem(type, s.SoftwareId, s.Title, s.FilePath) : null,
+            _ => null
+        };
+
+        // Creates a case-insensitive set of paths already stored in the database.
         private static HashSet<string> KnownPaths(IQueryable<string> paths) =>
             new(paths.ToList(), StringComparer.OrdinalIgnoreCase);
 
+        // Returns only paths that are not already in the known path set.
         private static IEnumerable<string> NewPaths(IEnumerable<string> paths, HashSet<string> known) =>
             paths.Where(p => known.Add(p));
 
+        // Gets a display title from a file path.
         private static string TitleOf(string path) => System.IO.Path.GetFileNameWithoutExtension(path);
-        
-        public List<string> GetMusicPaths(int userId)
-        {
-            using var db = new OmniDbContext();
-            return db.Music.Where(m => m.UserId == userId).OrderBy(m => m.Title).Select(m => m.FilePath).ToList();
-        }
-
-        public List<string> GetVideoPaths(int userId)
-        {
-            using var db = new OmniDbContext();
-            return db.Videos.Where(v => v.UserId == userId).OrderBy(v => v.Title).Select(v => v.FilePath).ToList();
-        }
-
-        public List<string> GetGamePaths(int userId)
-        {
-            using var db = new OmniDbContext();
-            return db.Games.Where(g => g.UserId == userId).OrderBy(g => g.Title).Select(g => g.FilePath).ToList();
-        }
-
-        public List<string> GetSoftwarePaths(int userId)
-        {
-            using var db = new OmniDbContext();
-            return db.Software.Where(s => s.UserId == userId).OrderBy(s => s.Title).Select(s => s.FilePath).ToList();
-        }
-
-        public void RemoveMusic(int userId, string path)
-        {
-            using var db = new OmniDbContext();
-            db.Music.Where(m => m.UserId == userId && m.FilePath == path).ExecuteDelete();
-        }
     }
 }

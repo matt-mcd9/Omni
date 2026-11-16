@@ -17,7 +17,7 @@ namespace Omni.Pages
         public GamesPage()
         {
             InitializeComponent();
-            
+            // adds file path tied to User 
             foreach (string path in _service.GetGamePaths(OmniService.CurrentUserId).Where(File.Exists))
             {
                 hasGameExe.Add(path);

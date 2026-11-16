@@ -20,7 +20,7 @@ namespace Omni.Pages
         public SoftwarePage()
         {
             InitializeComponent();
-            
+            // adds file path tied to User 
             foreach (string path in _service.GetSoftwarePaths(OmniService.CurrentUserId).Where(File.Exists))
             {
                 hasExeFiles.Add(path);

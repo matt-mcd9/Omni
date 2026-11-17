@@ -3,11 +3,15 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Omni.Data;
 
 namespace Omni.Pages
-{
+{   
+
     public partial class SettingsPage : UserControl
-    {
+    {   
+        private readonly OmniService _service = new();
+
         // Custom background until the user has picked their own colours
         private static readonly Color DefaultCustomBackground = Color.FromRgb(0x1E, 0x3A, 0x5F);
 
@@ -28,6 +32,8 @@ namespace Omni.Pages
 
             UserPicker.ItemsSource = PlaceholderUsers;
             UserPicker.SelectedIndex = 0;
+            UserPicker.SelectedIndex = OmniService.CurrentUserId - 1;            
+            UserPicker.SelectionChanged += UserPicker_SelectionChanged;
 
             _saveTimer.Tick += (_, _) => FlushSave();
             // Flush a pending save when leaving the page
@@ -93,6 +99,38 @@ namespace Omni.Pages
             ContrastWarning.Visibility = ThemeManager.IsReadable(background, text)
                 ? Visibility.Collapsed
                 : Visibility.Visible;
+        }
+        
+        private void UserPicker_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (UserPicker.SelectedIndex < 0) return;
+
+            // Finish saving a custom colour change for the previous user first
+            if (_saveTimer.IsEnabled) FlushSave();
+
+            OmniService.CurrentUserId = UserPicker.SelectedIndex + 1;   // "User 1" → 1, "User 2" → 2
+            ThemeManager.LoadFromDatabase(OmniService.CurrentUserId);
+            SyncThemeTiles();
+        }
+
+        // Selects the Day / Night / Custom tile that matches the active theme
+        private void SyncThemeTiles()
+        {
+            string theme = ThemeManager.CurrentTheme;
+            _syncing = true;
+            if (theme == ThemeManager.Light) DayTheme.IsChecked = true;
+            else if (theme == ThemeManager.Dark) NightTheme.IsChecked = true;
+            else
+            {
+                CustomTheme.IsChecked = true;
+                if (ThemeManager.LastCustom is { } custom)
+                {
+                    BackgroundPicker.Color = custom.Background;
+                    TextPicker.Color = custom.Text;
+                }
+            }
+            CustomPanel.Visibility = CustomTheme.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            _syncing = false;
         }
     }
 }

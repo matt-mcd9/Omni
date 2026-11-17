@@ -8,8 +8,10 @@ namespace Omni.Data
     public class OmniDbContext : DbContext
     {
         public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
-        public DbSet<Category> Categories => Set<Category>();
-        public DbSet<MediaItem> MediaItems => Set<MediaItem>();
+        public DbSet<Music> Music => Set<Music>();
+        public DbSet<Video> Videos => Set<Video>();
+        public DbSet<Game> Games => Set<Game>();
+        public DbSet<Software> Software => Set<Software>();
         public DbSet<Playlist> Playlists => Set<Playlist>();
         public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
         public DbSet<Favourite> Favourites => Set<Favourite>();
@@ -29,23 +31,26 @@ namespace Omni.Data
         {
             modelBuilder.Entity<LaunchHistory>().HasKey(h => h.HistoryId);
             modelBuilder.Entity<UserProfile>().HasKey(u => u.UserId);
-            modelBuilder.Entity<MediaItem>().HasKey(m => m.MediaId);
 
             modelBuilder.Entity<UserProfile>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
 
-            modelBuilder.Entity<MediaItem>()
-                .HasOne(m => m.User)
-                .WithMany(u => u.MediaItems)
-                .HasForeignKey(m => m.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Music>()
+                .HasOne(m => m.User).WithMany(u => u.Music)
+                .HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<MediaItem>()
-                .HasOne(m => m.Category)
-                .WithMany(c => c.MediaItems)
-                .HasForeignKey(m => m.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Video>()
+                .HasOne(m => m.User).WithMany(u => u.Videos)
+                .HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Game>()
+                .HasOne(m => m.User).WithMany(u => u.Games)
+                .HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Software>()
+                .HasOne(m => m.User).WithMany(u => u.Software)
+                .HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Playlist>()
                 .HasOne(p => p.User)
@@ -59,12 +64,6 @@ namespace Omni.Data
                 .HasForeignKey(pi => pi.PlaylistId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<PlaylistItem>()
-                .HasOne(pi => pi.MediaItem)
-                .WithMany(m => m.PlaylistItems)
-                .HasForeignKey(pi => pi.MediaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Favourite>()
                 .HasOne(f => f.User)
                 .WithMany(u => u.Favourites)
@@ -72,13 +71,7 @@ namespace Omni.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Favourite>()
-                .HasOne(f => f.MediaItem)
-                .WithMany(m => m.Favourites)
-                .HasForeignKey(f => f.MediaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Favourite>()
-                .HasIndex(f => new { f.UserId, f.MediaId })
+                .HasIndex(f => new { f.UserId, f.MediaType, f.ItemId })
                 .IsUnique();
 
             modelBuilder.Entity<LaunchHistory>()
@@ -87,17 +80,7 @@ namespace Omni.Data
                 .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<LaunchHistory>()
-                .HasOne(h => h.MediaItem)
-                .WithMany(m => m.LaunchHistory)
-                .HasForeignKey(h => h.MediaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Category>().HasData(
-                new Category { CategoryId = 1, CategoryName = "Music" },
-                new Category { CategoryId = 2, CategoryName = "Video" },
-                new Category { CategoryId = 3, CategoryName = "Game" },
-                new Category { CategoryId = 4, CategoryName = "Software" });
+            
         }
     }
 }

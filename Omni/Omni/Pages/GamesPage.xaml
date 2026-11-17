@@ -135,6 +135,25 @@
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Image Source="{Binding Icon}"
+                                           Width="22"
+                                           Height="22"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="13"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
                                 <StackPanel ToolTip="{Binding}">
                                     <TextBlock Text="&#xE7FC;"
                                                Style="{StaticResource IconStyle}"

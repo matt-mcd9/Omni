@@ -17,103 +17,38 @@ namespace Omni.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
 
-            modelBuilder.Entity("Omni.Models.Category", b =>
-                {
-                    b.Property<int>("CategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("CategoryId");
-
-                    b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            CategoryId = 1,
-                            CategoryName = "Music"
-                        },
-                        new
-                        {
-                            CategoryId = 2,
-                            CategoryName = "Video"
-                        },
-                        new
-                        {
-                            CategoryId = 3,
-                            CategoryName = "Game"
-                        },
-                        new
-                        {
-                            CategoryId = 4,
-                            CategoryName = "Software"
-                        });
-                });
-
             modelBuilder.Entity("Omni.Models.Favourite", b =>
                 {
                     b.Property<int>("FavouriteId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("MediaId")
+                    b.Property<int>("ItemId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("FavouriteId");
 
-                    b.HasIndex("MediaId");
-
-                    b.HasIndex("UserId", "MediaId")
+                    b.HasIndex("UserId", "MediaType", "ItemId")
                         .IsUnique();
 
                     b.ToTable("Favourites");
                 });
 
-            modelBuilder.Entity("Omni.Models.LaunchHistory", b =>
+            modelBuilder.Entity("Omni.Models.Game", b =>
                 {
-                    b.Property<int>("HistoryId")
+                    b.Property<int>("GameId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LaunchedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("MediaId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("HistoryId");
-
-                    b.HasIndex("MediaId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("LaunchHistory");
-                });
-
-            modelBuilder.Entity("Omni.Models.MediaItem", b =>
-                {
-                    b.Property<int>("MediaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Game_id");
 
                     b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MediaType")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -122,15 +57,69 @@ namespace Omni.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("User_id");
 
-                    b.HasKey("MediaId");
-
-                    b.HasIndex("CategoryId");
+                    b.HasKey("GameId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MediaItems");
+                    b.ToTable("Game");
+                });
+
+            modelBuilder.Entity("Omni.Models.LaunchHistory", b =>
+                {
+                    b.Property<int>("HistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LaunchedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MediaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("HistoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LaunchHistory");
+                });
+
+            modelBuilder.Entity("Omni.Models.Music", b =>
+                {
+                    b.Property<int>("MusicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Music_id");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("User_id");
+
+                    b.HasKey("MusicId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Music");
                 });
 
             modelBuilder.Entity("Omni.Models.Playlist", b =>
@@ -159,8 +148,15 @@ namespace Omni.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("MediaId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("PlaylistId")
                         .HasColumnType("INTEGER");
@@ -170,11 +166,35 @@ namespace Omni.Data.Migrations
 
                     b.HasKey("PlaylistItemId");
 
-                    b.HasIndex("MediaId");
-
                     b.HasIndex("PlaylistId");
 
                     b.ToTable("PlaylistItems");
+                });
+
+            modelBuilder.Entity("Omni.Models.Software", b =>
+                {
+                    b.Property<int>("SoftwareId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Software_id");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("User_id");
+
+                    b.HasKey("SoftwareId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Software");
                 });
 
             modelBuilder.Entity("Omni.Models.UserProfile", b =>
@@ -203,59 +223,72 @@ namespace Omni.Data.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("Omni.Models.Video", b =>
+                {
+                    b.Property<int>("VideoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Video_id");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("User_id");
+
+                    b.HasKey("VideoId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Video");
+                });
+
             modelBuilder.Entity("Omni.Models.Favourite", b =>
                 {
-                    b.HasOne("Omni.Models.MediaItem", "MediaItem")
-                        .WithMany("Favourites")
-                        .HasForeignKey("MediaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Omni.Models.UserProfile", "User")
                         .WithMany("Favourites")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("MediaItem");
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Omni.Models.Game", b =>
+                {
+                    b.HasOne("Omni.Models.UserProfile", "User")
+                        .WithMany("Games")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Omni.Models.LaunchHistory", b =>
                 {
-                    b.HasOne("Omni.Models.MediaItem", "MediaItem")
-                        .WithMany("LaunchHistory")
-                        .HasForeignKey("MediaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Omni.Models.UserProfile", "User")
                         .WithMany("LaunchHistory")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("MediaItem");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Omni.Models.MediaItem", b =>
+            modelBuilder.Entity("Omni.Models.Music", b =>
                 {
-                    b.HasOne("Omni.Models.Category", "Category")
-                        .WithMany("MediaItems")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Omni.Models.UserProfile", "User")
-                        .WithMany("MediaItems")
+                        .WithMany("Music")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Category");
 
                     b.Navigation("User");
                 });
@@ -273,35 +306,35 @@ namespace Omni.Data.Migrations
 
             modelBuilder.Entity("Omni.Models.PlaylistItem", b =>
                 {
-                    b.HasOne("Omni.Models.MediaItem", "MediaItem")
-                        .WithMany("PlaylistItems")
-                        .HasForeignKey("MediaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Omni.Models.Playlist", "Playlist")
                         .WithMany("Items")
                         .HasForeignKey("PlaylistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("MediaItem");
-
                     b.Navigation("Playlist");
                 });
 
-            modelBuilder.Entity("Omni.Models.Category", b =>
+            modelBuilder.Entity("Omni.Models.Software", b =>
                 {
-                    b.Navigation("MediaItems");
+                    b.HasOne("Omni.Models.UserProfile", "User")
+                        .WithMany("Software")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Omni.Models.MediaItem", b =>
+            modelBuilder.Entity("Omni.Models.Video", b =>
                 {
-                    b.Navigation("Favourites");
+                    b.HasOne("Omni.Models.UserProfile", "User")
+                        .WithMany("Videos")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("LaunchHistory");
-
-                    b.Navigation("PlaylistItems");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Omni.Models.Playlist", b =>
@@ -313,11 +346,17 @@ namespace Omni.Data.Migrations
                 {
                     b.Navigation("Favourites");
 
+                    b.Navigation("Games");
+
                     b.Navigation("LaunchHistory");
 
-                    b.Navigation("MediaItems");
+                    b.Navigation("Music");
 
                     b.Navigation("Playlists");
+
+                    b.Navigation("Software");
+
+                    b.Navigation("Videos");
                 });
 #pragma warning restore 612, 618
         }

@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Omni.Data;
 using Omni.Models;
-
 namespace Omni.Pages
 {
     // What a media card on the home page displays
@@ -16,9 +15,6 @@ namespace Omni.Pages
 
     public partial class HomePage : UserControl
     {
-        // Category ids seeded in OmniDbContext
-        private const int MusicCategory = 1, VideoCategory = 2, GameCategory = 3, SoftwareCategory = 4;
-
         // Placeholder: replace with the current user's name once the database work is merged
         private const string PlaceholderUsername = "User 1";
 
@@ -36,22 +32,22 @@ namespace Omni.Pages
 
             // Recent and favourites are stored per user; they stay empty until
             // the app has a current user to pass to GetRecentHistory / GetFavourites
-            ShowRecent(new List<MediaItem>());
-            ShowFavourites(new List<MediaItem>());        }
+            ShowRecent(new List<OmniService.LibraryItem>());
+            ShowFavourites(new List<OmniService.LibraryItem>());        }
 
         private void LoadLibraryCounts()
         {
-            var counts = _service.GetCategoryCounts();
-            int count(int category) => counts.TryGetValue(category, out var n) ? n : 0;
+            var counts = _service.GetLibraryCounts();
+            int count(string type) => counts.TryGetValue(type, out var n) ? n : 0;
 
-            MusicCount.Text = count(MusicCategory).ToString();
-            VideoCount.Text = count(VideoCategory).ToString();
-            GameCount.Text = count(GameCategory).ToString();
-            SoftwareCount.Text = count(SoftwareCategory).ToString();
+            MusicCount.Text = count("Music").ToString();
+            VideoCount.Text = count("Video").ToString();
+            GameCount.Text = count("Game").ToString();
+            SoftwareCount.Text = count("Software").ToString();
         }
 
         // Most recent first; the first item also fills the Continue card
-        private void ShowRecent(IList<MediaItem> items)
+        private void ShowRecent(IList<OmniService.LibraryItem> items)
         {
             var cards = items.Select(ToCard).ToList();
             RecentList.ItemsSource = cards;
@@ -73,21 +69,21 @@ namespace Omni.Pages
             GetStartedCard.Visibility = Visibility.Collapsed;
         }
 
-        private void ShowFavourites(IList<MediaItem> items)
+        private void ShowFavourites(IList<OmniService.LibraryItem> items)
         {
             var cards = items.Select(ToCard).ToList();
             FavouritesList.ItemsSource = cards;
             FavouritesEmpty.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private static MediaCardItem ToCard(MediaItem item)
+        private static MediaCardItem ToCard(OmniService.LibraryItem item)
         {
-            var (glyph, label) = item.CategoryId switch
+            var (glyph, label) = item.Type  switch
             {
-                MusicCategory => ("", "Music"),
-                VideoCategory => ("", "Video"),
-                GameCategory => ("", "Game"),
-                SoftwareCategory => ("", "App"),
+                "Music" => ("", "Music"),
+                "Video" => ("", "Video"),
+                "Game" => ("", "Game"),
+                "Software" => ("", "App"),
                 _ => ("", "File")
             };
             return new MediaCardItem(item.Title, label, glyph, item.FilePath);

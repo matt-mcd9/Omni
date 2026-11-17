@@ -6,10 +6,9 @@ namespace Omni.Models
     {
         public int PlaylistItemId { get; set; }
         public int PlaylistId { get; set; }
-        public int MediaId { get; set; }
         public int Position { get; set; }
 
         public Playlist? Playlist { get; set; }
-        public MediaItem? MediaItem { get; set; }
-    }
+        public string MediaType { get; set; } = string.Empty;
+        public int ItemId { get; set; }    }
 }

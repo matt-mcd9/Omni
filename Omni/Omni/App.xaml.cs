@@ -1,6 +1,8 @@
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Omni.Data;
+using System.Linq;
+using Omni.Models;
 
 namespace Omni
 {
@@ -14,6 +16,18 @@ namespace Omni
 
             using var db = new OmniDbContext();
             db.Database.Migrate();
+
+            if (!db.UserProfiles.Any())                                          
+            {                                                                    
+                db.UserProfiles.AddRange(                                        
+                    new UserProfile { UserId = 1, Username = "User 1" },         
+                    new UserProfile { UserId = 2, Username = "User 2" });        
+                db.SaveChanges();                                                
+            }                                                                    
+
+            ThemeManager.LoadFromDatabase(OmniService.CurrentUserId);
+            
+            
         }
 
         protected override void OnExit(ExitEventArgs e)

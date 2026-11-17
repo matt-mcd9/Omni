@@ -134,34 +134,15 @@
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
+                                <StackPanel ToolTip="{Binding Name}">
                                     <Image Source="{Binding Icon}"
-                                           Width="22"
-                                           Height="22"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,10,0"/>
-
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontSize="13"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextBrush}"/>
-                                    </StackPanel>
-                                </Grid>
-                                <StackPanel ToolTip="{Binding}">
-                                    <TextBlock Text="&#xE756;"
-                                               Style="{StaticResource IconStyle}"
-                                               FontSize="44"
-                                               HorizontalAlignment="Center"
-                                               Margin="0,0,0,8"/>
+                                           Width="44"
+                                           Height="44"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,8"/>
 
                                     <!-- Up to two lines, then an ellipsis; the tooltip has the full name -->
-                                    <TextBlock Text="{Binding}"
+                                    <TextBlock Text="{Binding Name}"
                                                FontSize="12"
                                                TextAlignment="Center"
                                                TextWrapping="Wrap"

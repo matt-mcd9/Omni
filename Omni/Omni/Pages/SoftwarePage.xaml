@@ -131,14 +131,14 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="&#xE756;"
-                                               Style="{StaticResource IconStyle}"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
+                                    <Image Source="{Binding Icon}"
+                                           Width="22"
+                                           Height="22"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
 
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding}"
+                                        <TextBlock Text="{Binding Name}"
                                                    FontSize="13"
                                                    TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource TextBrush}"/>

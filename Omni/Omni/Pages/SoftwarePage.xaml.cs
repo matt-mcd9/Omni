@@ -7,6 +7,10 @@ using System.Windows.Input;
 using System.Windows.Shapes;
 using Path = System.IO.Path;
 using Omni.Data;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Interop;
 
 namespace Omni.Pages
 {
@@ -17,14 +21,23 @@ namespace Omni.Pages
         String[] exeFileTypes;
         String[] fileTypes;
         List<String> hasExeFiles = new List<String>();
+
+        public class SoftwareDisplayItem {
+            public string Name { get; set; } = "";
+            public ImageSource? Icon { get; set; }
+        }
+
         public SoftwarePage()
         {
             InitializeComponent();
             // adds file path tied to User 
-            foreach (string path in _service.GetSoftwarePaths(OmniService.CurrentUserId).Where(File.Exists))
-            {
+            foreach (string path in _service.GetSoftwarePaths(OmniService.CurrentUserId).Where(File.Exists)) {
                 hasExeFiles.Add(path);
-                listApplications.Items.Add(Path.GetFileNameWithoutExtension(path));
+
+                listApplications.Items.Add(new SoftwareDisplayItem {
+                    Name = Path.GetFileNameWithoutExtension(path),
+                    Icon = getFileIcon(path)
+                });
             }
         }
 
@@ -43,7 +56,7 @@ namespace Omni.Pages
 
         }
 
-        //YOU NEED TO ADD EXCEPTION HANDLING HERE. WHAT HAPPENS IF NO DIRECTORY?
+        //Add exception handling for no directory?
         private void selectFolder_Click(object sender, EventArgs e) {
             hasExeFiles.Clear();
             listApplications.Items.Clear();
@@ -59,7 +72,10 @@ namespace Omni.Pages
                 foreach (String file in fileTypes) {
                         hasExeFiles.Add(file);
                         String results = System.IO.Path.GetFileNameWithoutExtension(file);
-                        listApplications.Items.Add(results);
+                        listApplications.Items.Add(new SoftwareDisplayItem {
+                            Name = results,
+                            Icon = getFileIcon(file)
+                        });
                 }
                 scanExeFiles(folderName);
 
@@ -74,10 +90,15 @@ namespace Omni.Pages
             if (Directory.Exists(exePath)) { 
                 exeFileTypes = Directory.GetFiles(exePath, "*.exe", SearchOption.TopDirectoryOnly);
 
-                foreach(String file in exeFileTypes) {
+                foreach (String file in exeFileTypes) {
                     hasExeFiles.Add(file);
+
                     String results = Path.GetFileNameWithoutExtension(file);
-                    listApplications.Items.Add(results);
+
+                    listApplications.Items.Add(new SoftwareDisplayItem {
+                        Name = results,
+                        Icon = getFileIcon(file)
+                    });
                 }
 
                 if (depth < maxDepth) {
@@ -92,6 +113,24 @@ namespace Omni.Pages
                 }
             }
         
+        }
+
+        private ImageSource? getFileIcon(string filePath) {
+            using System.Drawing.Icon? icon =
+                System.Drawing.Icon.ExtractAssociatedIcon(filePath);
+
+            if (icon == null)
+                return null;
+
+            ImageSource image = Imaging.CreateBitmapSourceFromHIcon(
+                icon.Handle,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions()
+            );
+
+            image.Freeze();
+
+            return image;
         }
 
     }

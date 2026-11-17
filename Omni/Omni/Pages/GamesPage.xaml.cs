@@ -1,9 +1,14 @@
 using Microsoft.Win32;
+using Omni.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Omni.Data;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using static Omni.Pages.SoftwarePage;
 
 namespace Omni.Pages
 {
@@ -14,6 +19,12 @@ namespace Omni.Pages
         List<String> hasGameExe = new List<String>();
         String[] fileTypes;
         private readonly OmniService _service = new();
+
+        public class GameDisplayItem {
+            public string Name { get; set; } = "";
+            public ImageSource? Icon { get; set; }
+        }
+
         public GamesPage()
         {
             InitializeComponent();
@@ -21,7 +32,10 @@ namespace Omni.Pages
             foreach (string path in _service.GetGamePaths(OmniService.CurrentUserId).Where(File.Exists))
             {
                 hasGameExe.Add(path);
-                listGames.Items.Add(Path.GetFileNameWithoutExtension(path));
+                listGames.Items.Add(new SoftwareDisplayItem {
+                    Name = Path.GetFileNameWithoutExtension(path),
+                    Icon = getFileIcon(path)
+                });
             }
         }
 
@@ -55,7 +69,10 @@ namespace Omni.Pages
                     Debug.WriteLine(file);
                     hasGameExe.Add(file);
                     String results = System.IO.Path.GetFileNameWithoutExtension(file);
-                    listGames.Items.Add(results);
+                    listGames.Items.Add(new GameDisplayItem {
+                        Name = results,
+                        Icon = getFileIcon(file)
+                    });
 
                 }
                 scanExeFiles(folderName);
@@ -74,7 +91,10 @@ namespace Omni.Pages
                 foreach (String file in fileTypes) {
                     hasGameExe.Add(file);
                     String results = Path.GetFileNameWithoutExtension(file);
-                    listGames.Items.Add(results);
+                    listGames.Items.Add(new GameDisplayItem {
+                        Name = results,
+                        Icon = getFileIcon(file)
+                    });
                 }
 
                 if (depth < maxDepth) {
@@ -91,7 +111,23 @@ namespace Omni.Pages
 
         }
 
+        private ImageSource? getFileIcon(string filePath) {
+            using System.Drawing.Icon? icon =
+                System.Drawing.Icon.ExtractAssociatedIcon(filePath);
 
+            if (icon == null)
+                return null;
+
+            ImageSource image = Imaging.CreateBitmapSourceFromHIcon(
+                icon.Handle,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions()
+            );
+
+            image.Freeze();
+
+            return image;
+        }
 
     }
 }

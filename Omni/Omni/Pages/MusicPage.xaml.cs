@@ -18,6 +18,12 @@ namespace Omni.Pages
     {
         private readonly OmniService _service = new();
 
+        // Files that Open file and Choose folder pick up
+        private static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".mp3", ".flac", ".wav", ".m4a", ".aac", ".ogg", ".opus", ".wma",
+        };
+
         private const string PlayGlyph = "";
         private const string PauseGlyph = "";
 
@@ -27,10 +33,18 @@ namespace Omni.Pages
         // True while the user is dragging the seek bar, so playback doesn't move it
         private bool _seeking;
 
-        // Placeholder storage: the playlist only lasts while the app is running.
-        // Replace LoadPlaylistPaths and SavePlaylistPaths once it's decided where it is saved.
-        private static List<string> _storedPlaylistPaths = new();
+        // One player for the whole app. A new Music page is made each time it's opened, and the
+        // music keeps playing after leaving it, so every page shares this player instead of
+        // starting another one on top. Only the page on screen listens to its events.
+        private static LibVLC? _sharedLibVLC;
+        private static MediaPlayer? _sharedPlayer;
+        private bool _listening;
 
+        // For the sidebar's mini player; null until a Music page has been opened
+        internal static MediaPlayer? SharedPlayer => _sharedPlayer;
+        internal static LibVLC? SharedLibVLC => _sharedLibVLC;
+
+        // The playlist is the current user's saved music; adding and removing songs updates the database
         private readonly ObservableCollection<PlaylistSong> _songs = new();
 
 
@@ -40,21 +54,97 @@ namespace Omni.Pages
 
             Core.Initialize();
 
-            _libVLC = new LibVLC();
-            _mediaPlayer = new MediaPlayer(_libVLC);
+            _sharedLibVLC ??= new LibVLC();
+            _sharedPlayer ??= new MediaPlayer(_sharedLibVLC);
+            _libVLC = _sharedLibVLC;
+            _mediaPlayer = _sharedPlayer;
 
-            // LibVLC raises these on its own thread
-            _mediaPlayer.Playing += OnPlaying;
-            _mediaPlayer.Paused += OnPaused;
-            _mediaPlayer.EndReached += OnEndReached;
-            _mediaPlayer.Stopped += OnStopped;
-            _mediaPlayer.TimeChanged += OnTimeChanged;
-            _mediaPlayer.LengthChanged += OnLengthChanged;
-            
+            Loaded += (_, _) =>
+            {
+                Listen(true);
+                ShowPlayerState();
+            };
+            Unloaded += (_, _) => Listen(false);
+
             PlaylistList.ItemsSource = _songs;
-            _storedPlaylistPaths.Clear();                                     
-            AddSongs(LoadPlaylistPaths());
-            AddSongs(_service.GetMusicPaths(OmniService.CurrentUserId).Where(File.Exists));   
+            // Already saved, so only show them; files that were moved or deleted are skipped
+            AddSongs(_service.GetMusicPaths(OmniService.CurrentUserId).Where(File.Exists), save: false);
+        }
+
+        // Plays a song from outside the page (a card on Home). A page that was just opened isn't
+        // on screen yet, so it waits until it is and listens to the player, to show the song.
+        public void Play(string path)
+        {
+            if (IsLoaded)
+            {
+                PlaySong(path);
+                return;
+            }
+
+            RoutedEventHandler? playOnce = null;
+            playOnce = (_, _) =>
+            {
+                Loaded -= playOnce;
+                PlaySong(path);
+            };
+            Loaded += playOnce;
+        }
+
+        // Stops the shared player; used when switching user, so the music doesn't carry on for the next one
+        public static void StopAll() => _sharedPlayer?.Stop();
+
+        // LibVLC raises these on its own thread
+        private void Listen(bool on)
+        {
+            if (_mediaPlayer is null || on == _listening) return;
+            _listening = on;
+
+            if (on)
+            {
+                _mediaPlayer.Playing += OnPlaying;
+                _mediaPlayer.Paused += OnPaused;
+                _mediaPlayer.EndReached += OnEndReached;
+                _mediaPlayer.Stopped += OnStopped;
+                _mediaPlayer.TimeChanged += OnTimeChanged;
+                _mediaPlayer.LengthChanged += OnLengthChanged;
+            }
+            else
+            {
+                _mediaPlayer.Playing -= OnPlaying;
+                _mediaPlayer.Paused -= OnPaused;
+                _mediaPlayer.EndReached -= OnEndReached;
+                _mediaPlayer.Stopped -= OnStopped;
+                _mediaPlayer.TimeChanged -= OnTimeChanged;
+                _mediaPlayer.LengthChanged -= OnLengthChanged;
+            }
+        }
+
+        // Coming back to the page while a song is playing or paused: show that song, not "Nothing playing"
+        private void ShowPlayerState()
+        {
+            if (_mediaPlayer is null) return;
+
+            if (_mediaPlayer.Volume >= 0)
+                VolumeSlider.Value = _mediaPlayer.Volume;
+
+            string? path = CurrentSongPath();
+            bool active = _mediaPlayer.State is VLCState.Playing or VLCState.Paused or VLCState.Opening or VLCState.Buffering;
+            if (path is null || !active) return;
+
+            ShowTrackInfo();
+            ShowPlayState(_mediaPlayer.IsPlaying);
+            try
+            {
+                LoadAlbumArt(path);
+            }
+            catch (Exception ex) when (ex is TagLib.CorruptFileException or TagLib.UnsupportedFormatException or IOException)
+            {
+                AlbumArt.Source = null;
+            }
+
+            TotalTimeText.Text = FormatTime(_mediaPlayer.Length);
+            CurrentTimeText.Text = FormatTime(_mediaPlayer.Time);
+            SeekSlider.Value = _mediaPlayer.Position;
         }
 
         // ----- Player events (marshalled to the UI thread) -----
@@ -93,6 +183,7 @@ namespace Omni.Pages
             SeekSlider.Value = 0;
             CurrentTimeText.Text = FormatTime(0);
             TotalTimeText.Text = FormatTime(0);
+            UpdateFavouriteButton();
         });
 
         private void OnTimeChanged(object? sender, MediaPlayerTimeChangedEventArgs e)
@@ -133,6 +224,56 @@ namespace Omni.Pages
 
             int index = IndexOfSong(path);
             PlaylistList.SelectedItem = index >= 0 ? _songs[index] : null;
+            UpdateFavouriteButton();
+        }
+
+        // ----- Favourite -----
+
+        private const string HeartGlyph = "";
+        private const string HeartFilledGlyph = "";
+        private static readonly System.Windows.Media.Brush FavouriteBrush = CreateFavouriteBrush();
+
+        private static System.Windows.Media.Brush CreateFavouriteBrush()
+        {
+            var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xEF, 0x44, 0x44));
+            brush.Freeze();
+            return brush;
+        }
+
+        // The song playing (or paused) now, or null once it has stopped
+        private string? PlayingPath() =>
+            _mediaPlayer?.State is VLCState.Playing or VLCState.Paused or VLCState.Opening or VLCState.Buffering
+                ? CurrentSongPath()
+                : null;
+
+        // Shows whether the song playing now is a favourite. Only songs saved in the
+        // playlist can be favourites, so the button is greyed out for anything else.
+        private void UpdateFavouriteButton()
+        {
+            string? path = PlayingPath();
+            int user = OmniService.CurrentUserId;
+            int? id = path is null ? null : _service.GetItemId(user, "Music", path);
+            bool favourite = id is not null && _service.IsFavourite(user, "Music", id.Value);
+
+            FavouriteButton.IsEnabled = id is not null;
+            FavouriteButton.Content = favourite ? HeartFilledGlyph : HeartGlyph;
+            FavouriteButton.ToolTip = favourite ? "Remove from favourites" : "Add to favourites";
+            if (favourite) FavouriteButton.Foreground = FavouriteBrush;
+            else FavouriteButton.ClearValue(ForegroundProperty);
+        }
+
+        private void Favourite_Click(object sender, RoutedEventArgs e)
+        {
+            string? path = PlayingPath();
+            int user = OmniService.CurrentUserId;
+            int? id = path is null ? null : _service.GetItemId(user, "Music", path);
+            if (id is null) return;
+
+            if (_service.IsFavourite(user, "Music", id.Value))
+                _service.RemoveFavourite(user, "Music", id.Value);
+            else
+                _service.AddFavourite(user, "Music", id.Value);
+            UpdateFavouriteButton();
         }
 
         private string? CurrentSongPath()
@@ -141,8 +282,8 @@ namespace Omni.Pages
             return media is null ? null : new Uri(media.Mrl).LocalPath;
         }
 
-        // A song's tags, falling back to its file name
-        private static (string Title, string Details) ReadTrackInfo(string path)
+        // A song's tags, falling back to its file name (also used by the sidebar's mini player)
+        internal static (string Title, string Details) ReadTrackInfo(string path)
         {
             string title = Path.GetFileNameWithoutExtension(path);
             string details = "";
@@ -164,10 +305,6 @@ namespace Omni.Pages
 
         // ----- Playlist -----
 
-        private static List<string> LoadPlaylistPaths() => new(_storedPlaylistPaths);
-
-        private static void SavePlaylistPaths(IEnumerable<string> paths) => _storedPlaylistPaths = paths.ToList();
-
         private int IndexOfSong(string? path)
         {
             for (int i = 0; i < _songs.Count; i++)
@@ -179,39 +316,119 @@ namespace Omni.Pages
         }
 
         // Adds songs to the end of the playlist, skipping any already in it
-        private void AddSongs(IEnumerable<string> paths)
-        {
-            foreach (string path in paths)
-            {
-                if (IndexOfSong(path) >= 0) continue;
+        private void AddSongs(IEnumerable<string> paths, bool save = true) =>
+            // Tags are only read for songs that aren't in the playlist yet
+            AddSongs(paths.Where(path => IndexOfSong(path) < 0).Select(ToSong), save);
 
-                var (title, details) = ReadTrackInfo(path);
-                _songs.Add(new PlaylistSong(title, details, path));
+        private void AddSongs(IEnumerable<PlaylistSong> songs, bool save = true)
+        {
+            var added = new List<string>();
+            foreach (var song in songs)
+            {
+                if (IndexOfSong(song.Path) >= 0) continue;
+
+                _songs.Add(song);
+                added.Add(song.Path);
             }
-            _service.SaveScannedMusic(OmniService.CurrentUserId, paths);
+            if (save && added.Count > 0)
+                _service.SaveScannedMusic(OmniService.CurrentUserId, added);
             PlaylistChanged();
         }
-        private void AddSongs_Click(object sender, RoutedEventArgs e)
+
+        private static PlaylistSong ToSong(string path)
         {
-            var dialog = new OpenFileDialog { Filter = "Audio Files|*.mp3", Multiselect = true };
-            if (dialog.ShowDialog() == true)
-                AddSongs(dialog.FileNames);
+            var (title, details) = ReadTrackInfo(path);
+            return new PlaylistSong(title, details, path);
+        }
+
+        // Open file: plays one song and adds it to the playlist
+        private void OpenSong_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Audio Files|" + string.Join(";", AudioExtensions.Select(ext => "*" + ext))
+            };
+            if (dialog.ShowDialog() != true) return;
+
+            AddSongs(new[] { dialog.FileName });
+            PlaySong(dialog.FileName);
+        }
+
+        // Choose folder: adds every song in the folder and its subfolders to the playlist
+        private async void ChooseFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFolderDialog { Title = "Choose a folder with music" };
+            if (dialog.ShowDialog() != true) return;
+
+            string folder = dialog.FolderName;
+            StatusText.Text = "Scanning…";
+            StatusText.Visibility = Visibility.Visible;
+            EmptyText.Visibility = Visibility.Collapsed;
+
+            List<PlaylistSong> found;
+            try
+            {
+                found = await Task.Run(() => ScanFolder(folder));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                PlaylistChanged();
+                StatusText.Text = "Couldn't read this folder.";
+                StatusText.Visibility = Visibility.Visible;
+                return;
+            }
+
+            AddSongs(found);
+            if (found.Count == 0)
+            {
+                StatusText.Text = "No music found in this folder or its subfolders.";
+                StatusText.Visibility = Visibility.Visible;
+            }
+        }
+
+        // Finds songs in the folder and all of its subfolders. Runs off the UI thread,
+        // tags included, so a big folder doesn't freeze the window.
+        private static List<PlaylistSong> ScanFolder(string folder)
+        {
+            var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+
+            return Directory.EnumerateFiles(folder, "*", options)
+                .Where(path => AudioExtensions.Contains(Path.GetExtension(path)))
+                .OrderBy(path => path, StringComparer.CurrentCultureIgnoreCase)
+                .Select(ToSong)
+                .ToList();
         }
 
         private void RemoveSong(PlaylistSong song)
         {
             _songs.Remove(song);
-            _service.RemoveMusic(OmniService.CurrentUserId, song.Path); 
+            _service.RemoveMusic(OmniService.CurrentUserId, song.Path);
             PlaylistChanged();
+            // A song that's no longer in the playlist can't be a favourite
+            UpdateFavouriteButton();
+        }
+
+        // Removes every song from the playlist and the database; the files stay on disk
+        private void RemoveAll_Click(object sender, RoutedEventArgs e)
+        {
+            string songs = _songs.Count == 1 ? "1 song" : $"{_songs.Count} songs";
+            var answer = MessageBox.Show(Window.GetWindow(this),
+                $"Remove all {songs} from your playlist?\n\nThe files stay on your computer.",
+                "Omni", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            if (answer != MessageBoxResult.Yes) return;
+
+            _service.RemoveAllMusic(OmniService.CurrentUserId);
+            _songs.Clear();
+            PlaylistChanged();
+            UpdateFavouriteButton();
         }
 
         private void PlaylistChanged()
         {
-            SavePlaylistPaths(_songs.Select(song => song.Path));
-
             EmptyText.Visibility = _songs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             StatusText.Text = _songs.Count == 1 ? "1 song" : $"{_songs.Count} songs";
             StatusText.Visibility = _songs.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            RemoveAllButton.Visibility = StatusText.Visibility;
         }
 
         private void PlaySong(string path)
@@ -237,6 +454,9 @@ namespace Omni.Pages
 
             using Media media = new Media(_libVLC, new Uri(path));
             _mediaPlayer?.Play(media);
+
+            // For Recently opened on Home; songs not in the playlist aren't recorded
+            _service.RecordLaunchByPath(OmniService.CurrentUserId, "Music", path);
         }
 
        
@@ -280,6 +500,20 @@ namespace Omni.Pages
                 Play_Click(sender, e);
             else
                 Pause_Click(sender, e);
+        }
+
+        // Previous / Next: the song before or after the one playing now (or the selected one)
+        private void Previous_Click(object sender, RoutedEventArgs e) => PlayRelative(-1);
+
+        private void Next_Click(object sender, RoutedEventArgs e) => PlayRelative(1);
+
+        private void PlayRelative(int step)
+        {
+            int index = IndexOfSong(CurrentSongPath() ?? (PlaylistList.SelectedItem as PlaylistSong)?.Path);
+            int target = index + step;
+            if (index < 0 || target < 0 || target >= _songs.Count) return;
+
+            PlaySong(_songs[target].Path);
         }
 
         private void VolumeSet(object sender, RoutedPropertyChangedEventArgs<double> e)

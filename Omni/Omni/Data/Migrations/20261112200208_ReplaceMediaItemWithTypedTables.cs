@@ -46,6 +46,16 @@ namespace Omni.Data.Migrations
                 name: "IX_Favourites_UserId_MediaId",
                 table: "Favourites");
 
+            // These pointed at MediaItems, which is gone; ItemId and MediaType (added below) replace them.
+            // They're NOT NULL and no longer in the model, so leaving them made every insert into these tables fail.
+            migrationBuilder.DropColumn(
+                name: "MediaId",
+                table: "PlaylistItems");
+
+            migrationBuilder.DropColumn(
+                name: "MediaId",
+                table: "LaunchHistory");
+
             migrationBuilder.RenameColumn(
                 name: "MediaId",
                 table: "Favourites",
@@ -240,6 +250,20 @@ namespace Omni.Data.Migrations
                 name: "ItemId",
                 table: "Favourites",
                 newName: "MediaId");
+
+            migrationBuilder.AddColumn<int>(
+                name: "MediaId",
+                table: "PlaylistItems",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<int>(
+                name: "MediaId",
+                table: "LaunchHistory",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: 0);
 
             migrationBuilder.CreateTable(
                 name: "Categories",

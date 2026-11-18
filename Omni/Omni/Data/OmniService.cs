@@ -53,6 +53,22 @@ namespace Omni.Data
             return db.Favourites.Any(f => f.UserId == userId && f.MediaType == mediaType && f.ItemId == itemId);
         }
 
+        // Finds the library ID of a file the user has saved, or null if it isn't in their library.
+        // Paths are matched ignoring case, as when saving scans.
+        public int? GetItemId(int userId, string mediaType, string path)
+        {
+            using var db = new OmniDbContext();
+            string lower = path.ToLower();
+            return mediaType switch
+            {
+                "Music" => db.Music.Where(m => m.UserId == userId && m.FilePath.ToLower() == lower).Select(m => (int?)m.MusicId).FirstOrDefault(),
+                "Video" => db.Videos.Where(v => v.UserId == userId && v.FilePath.ToLower() == lower).Select(v => (int?)v.VideoId).FirstOrDefault(),
+                "Game" => db.Games.Where(g => g.UserId == userId && g.FilePath.ToLower() == lower).Select(g => (int?)g.GameId).FirstOrDefault(),
+                "Software" => db.Software.Where(s => s.UserId == userId && s.FilePath.ToLower() == lower).Select(s => (int?)s.SoftwareId).FirstOrDefault(),
+                _ => null
+            };
+        }
+
         // Gets the user's favourites and resolves them to their library items.
         public List<LibraryItem> GetFavourites(int userId)
         {
@@ -67,16 +83,16 @@ namespace Omni.Data
 
         //-------------------------------------------------------------------------------------------------------------//
         // Library overview
-        // Gets the number of items stored in each library.
-        public Dictionary<string, int> GetLibraryCounts()
+        // Gets the number of items stored in each of the user's libraries.
+        public Dictionary<string, int> GetLibraryCounts(int userId)
         {
             using var db = new OmniDbContext();
             return new Dictionary<string, int>
             {
-                ["Music"] = db.Music.Count(),
-                ["Video"] = db.Videos.Count(),
-                ["Game"] = db.Games.Count(),
-                ["Software"] = db.Software.Count()
+                ["Music"] = db.Music.Count(m => m.UserId == userId),
+                ["Video"] = db.Videos.Count(v => v.UserId == userId),
+                ["Game"] = db.Games.Count(g => g.UserId == userId),
+                ["Software"] = db.Software.Count(s => s.UserId == userId)
             };
         }
 
@@ -107,6 +123,13 @@ namespace Omni.Data
             using var db = new OmniDbContext();
             db.Music.Where(m => m.UserId == userId && m.FilePath == path).ExecuteDelete();
             db.SaveChanges();
+        }
+
+        // Removes all music files from the user's library.
+        public void RemoveAllMusic(int userId)
+        {
+            using var db = new OmniDbContext();
+            db.Music.Where(m => m.UserId == userId).ExecuteDelete();
         }
 
         // Adds new scanned music files that are not already in the user's library.
@@ -149,6 +172,13 @@ namespace Omni.Data
             using var db = new OmniDbContext();
             db.Videos.Where(v => v.UserId == userId && v.FilePath == path).ExecuteDelete();
             db.SaveChanges();
+        }
+
+        // Removes all video files from the user's library.
+        public void RemoveAllVideos(int userId)
+        {
+            using var db = new OmniDbContext();
+            db.Videos.Where(v => v.UserId == userId).ExecuteDelete();
         }
 
         // Adds new scanned video files that are not already in the user's library.
@@ -264,6 +294,47 @@ namespace Omni.Data
             db.SaveChanges();
         }
 
+        // Records opening a file from the user's library. Pages only know the path, so this finds
+        // the item first; files that aren't in the library aren't recorded.
+        public void RecordLaunchByPath(int userId, string mediaType, string path)
+        {
+            int? itemId = GetItemId(userId, mediaType, path);
+            if (itemId is null) return;
+
+            RecordLaunch(userId, mediaType, itemId.Value);
+
+            // Only the most recent launches are ever shown, so older ones are dropped
+            using var db = new OmniDbContext();
+            var old = db.LaunchHistory
+                .Where(h => h.UserId == userId)
+                .OrderByDescending(h => h.LaunchedDate)
+                .Skip(MaxHistoryPerUser)
+                .Select(h => h.HistoryId)
+                .ToList();
+            if (old.Count > 0)
+                db.LaunchHistory.Where(h => old.Contains(h.HistoryId)).ExecuteDelete();
+        }
+
+        private const int MaxHistoryPerUser = 100;
+
+        // Gets what the user opened most recently, newest first, each item once.
+        // Items removed from the library since are skipped.
+        public List<LibraryItem> GetRecentItems(int userId, int count)
+        {
+            using var db = new OmniDbContext();
+            var history = db.LaunchHistory
+                .Where(h => h.UserId == userId)
+                .OrderByDescending(h => h.LaunchedDate)
+                .ToList();
+
+            return history
+                .DistinctBy(h => (h.MediaType, h.ItemId))
+                .Select(h => FindItem(db, h.MediaType, h.ItemId))
+                .OfType<LibraryItem>()
+                .Take(count)
+                .ToList();
+        }
+
         // Gets the user's most recent launch records.
         public List<LaunchHistory> GetRecentHistory(int userId, int count = 20)
         {
@@ -316,6 +387,27 @@ namespace Omni.Data
         {
             using var db = new OmniDbContext();
             return db.UserProfiles.ToList();
+        }
+
+        // Gets one user profile, or null if there is no user with this ID.
+        public UserProfile? GetUser(int userId)
+        {
+            using var db = new OmniDbContext();
+            return db.UserProfiles.Find(userId);
+        }
+
+        // Creates a user with this name and returns it (the database picks the ID),
+        // or returns null if the name is already taken, ignoring case.
+        public UserProfile? CreateUser(string username)
+        {
+            using var db = new OmniDbContext();
+            string name = username.Trim();
+            if (db.UserProfiles.Any(u => u.Username.ToLower() == name.ToLower())) return null;
+
+            var user = new UserProfile { Username = name };
+            db.UserProfiles.Add(user);
+            db.SaveChanges();
+            return user;
         }
 
         // Adds a user profile with the specified ID.

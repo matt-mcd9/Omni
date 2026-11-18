@@ -61,9 +61,32 @@
             </Setter>
         </Style>
 
+        <!-- Borderless small button with an icon + text (Remove all) -->
+        <Style x:Key="TextButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="Padding" Value="6,3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Rows in the scanned video list -->
         <Style x:Key="VideoItemStyle" TargetType="ListBoxItem">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="0,0,0,2"/>
             <Setter Property="Template">
@@ -111,33 +134,62 @@
                         <TextBlock Text="Library" Foreground="{DynamicResource TextBrush}"
                                    FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <Button HorizontalAlignment="Right" Style="{StaticResource OutlineButtonStyle}"
-                                Click="ChooseFolder_Click" ToolTip="Scan a folder for videos">
+                                Click="Open_Click" ToolTip="Play a video file and add it to the library">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8B7;" Style="{StaticResource IconStyle}" FontSize="13"
+                                <TextBlock Text="&#xE8E5;" Style="{StaticResource IconStyle}" FontSize="13"
                                            VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Choose folder" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="Open file" FontSize="12" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </Grid>
 
+                    <!-- Full width under the header, like Add songs on the Music page -->
+                    <Button DockPanel.Dock="Top" Margin="2,0,0,8" Height="29"
+                            Style="{StaticResource OutlineButtonStyle}" Click="ChooseFolder_Click"
+                            ToolTip="Scan a folder for videos">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8B7;" Style="{StaticResource IconStyle}" FontSize="13"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Choose folder" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     <TextBlock x:Name="FolderText" DockPanel.Dock="Top" Margin="2,0,0,2"
                                Foreground="{DynamicResource MutedTextBrush}" FontSize="12"
                                TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
-                    <TextBlock x:Name="StatusText" DockPanel.Dock="Top" Margin="2,0,0,10"
-                               Foreground="{DynamicResource MutedTextBrush}" FontSize="12"
-                               Visibility="Collapsed"/>
+                    <Grid DockPanel.Dock="Top" Margin="2,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="StatusText" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="12"
+                                   TextWrapping="Wrap" Visibility="Collapsed"/>
+                        <Button x:Name="RemoveAllButton" Grid.Column="1" Style="{StaticResource TextButtonStyle}"
+                                Click="RemoveAll_Click" Visibility="Collapsed"
+                                ToolTip="Remove every video from the library (the files stay on your computer)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE74D;" Style="{StaticResource IconStyle}" FontSize="12"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Remove all" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
                     <Grid>
                         <ListBox x:Name="VideoList" Background="Transparent" BorderThickness="0"
                                  ItemContainerStyle="{StaticResource VideoItemStyle}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 SelectionChanged="VideoList_SelectionChanged">
+                                 SelectionChanged="VideoList_SelectionChanged"
+                                 KeyDown="VideoList_KeyDown">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid ToolTip="{Binding Path}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="&#xE714;" Style="{StaticResource IconStyle}" FontSize="16"
                                                    VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -149,6 +201,21 @@
                                                        TextTrimming="CharacterEllipsis"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                         </StackPanel>
+                                        <!-- Shown only while the pointer is over the row -->
+                                        <Button Grid.Column="2" Content="&#xE711;" ToolTip="Remove from library"
+                                                Width="24" Height="24" FontSize="10" Margin="4,0,0,0"
+                                                Click="RemoveVideo_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource PlayerButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Hidden"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -206,14 +273,18 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button HorizontalAlignment="Left" VerticalAlignment="Center"
-                            Style="{StaticResource OutlineButtonStyle}" Click="Open_Click"
-                            ToolTip="Open a single video file">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8E5;" Style="{StaticResource IconStyle}" FontSize="13"
-                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Open file" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <!-- Favourite the video playing now; greyed out while nothing from the library is playing -->
+                    <Button x:Name="FavouriteButton" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Content="&#xE006;" ToolTip="Add to favourites" IsEnabled="False" Click="Favourite_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource PlayerButtonStyle}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.35"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                     </Button>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">

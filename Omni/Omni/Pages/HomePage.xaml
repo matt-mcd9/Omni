@@ -99,9 +99,9 @@
 
             <!-- ===== Greeting ===== -->
             <TextBlock x:Name="GreetingText" Text="Welcome back" Foreground="{DynamicResource TextBrush}"
-                       FontSize="26" FontWeight="Bold"/>
+                       FontSize="30" FontWeight="Bold"/>
             <TextBlock x:Name="DateText" Foreground="{DynamicResource MutedTextBrush}"
-                       FontSize="13" Margin="0,4,0,20"/>
+                       FontSize="20" Margin="0,4,0,20"/>
 
             <!-- ===== Continue: the last opened item ===== -->
             <Border x:Name="ContinueCard" Visibility="Collapsed"

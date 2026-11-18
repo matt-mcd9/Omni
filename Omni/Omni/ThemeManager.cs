@@ -2,10 +2,12 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using Omni.Data;
 
 namespace Omni
 {
-   
+    // Each user's theme is stored in UserProfiles.Theme as "<active theme>|<last custom colours>",
+    // e.g. "Light|#1E3A5F,#FFFFFF". The part after "|" is left out until custom colours are picked.
     public static class ThemeManager
     {
         public const string Dark = "Dark";
@@ -14,16 +16,19 @@ namespace Omni
         private static readonly Color DarkBg = Color.FromRgb(0x0B, 0x0B, 0x0B);
         private static readonly Color LightBg = Color.FromRgb(0xFF, 0xFF, 0xFF);
 
-        private static readonly string SettingsPath = Path.Combine(
+        // Where the theme was kept before it moved to the database; imported once, then renamed
+        private static readonly string OldSettingsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Omni", "theme.txt");
+
+        private const char CustomSeparator = '|';
 
         // Below this WCAG contrast ratio, text is shown in black or white instead
         // so a custom theme can never make the app unreadable
         private const double MinContrast = 3.0;
 
-        // File contents as last read or written, to skip writes when nothing changed
-        private static string? _savedContent;
+        // Database value as last read or written, to skip writes when nothing changed
+        private static string? _savedValue;
 
         public static string CurrentTheme { get; private set; } = Dark;
 
@@ -45,38 +50,60 @@ namespace Omni
         public static Color ReadableText(Color background, Color text) =>
             IsReadable(background, text) ? text : ContrastText(background);
 
-        public static void LoadSaved()
+        // Applies the theme stored for this user. A user without custom colours
+        // doesn't keep the previous user's, so they never leak between users.
+        public static void Load(int userId)
         {
             string theme = Dark;
+            LastCustom = null;
+
+            string? stored = new OmniService().GetTheme(userId);
+            if (!string.IsNullOrWhiteSpace(stored))
+            {
+                var parts = stored.Split(CustomSeparator);
+                theme = parts[0].Trim();
+                if (parts.Length > 1 && TryParseCustom(parts[1], out var bg, out var text))
+                    LastCustom = (bg, text);
+            }
+
+            Apply(theme, save: false);
+            _savedValue = StoredValue();
+        }
+
+        // Saves the current user's theme, then goes back to the default with no user loaded,
+        // as on start-up. Nothing more is saved until Load is called for the next user.
+        public static void Reset()
+        {
+            SavePending();
+            _savedValue = null;
+            LastCustom = null;
+            Apply(Dark, save: false);
+        }
+
+        // Moves the theme from the old theme.txt into this user's profile, once.
+        // The file is renamed rather than deleted, so nothing is lost if the import goes wrong.
+        public static void ImportOldSettingsFile(int userId)
+        {
             try
             {
-                if (File.Exists(SettingsPath))
+                if (!File.Exists(OldSettingsPath)) return;
+
+                // Line 1: the active theme. Line 2: the last custom colours
+                var lines = File.ReadAllLines(OldSettingsPath);
+                if (lines.Length > 0 && !string.IsNullOrWhiteSpace(lines[0]))
                 {
-                    // Line 1: the active theme. Line 2: the last custom colours
-                    var lines = File.ReadAllLines(SettingsPath);
-                    if (lines.Length > 0) theme = lines[0].Trim();
-                    if (lines.Length > 1 && TryParseCustom(lines[1], out var bg, out var text))
-                        LastCustom = (bg, text);
+                    string value = lines[0].Trim();
+                    if (lines.Length > 1 && TryParseCustom(lines[1], out _, out _))
+                        value += CustomSeparator + lines[1].Trim();
+                    new OmniService().SaveTheme(userId, value);
                 }
+
+                File.Move(OldSettingsPath, OldSettingsPath + ".imported", overwrite: true);
             }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
-
-            Apply(theme, save: false);
-            _savedContent = SettingsContent();
-            
         }
-        
-        // Applies the theme stored for this user in the database, if there is one
-        public static void LoadFromDatabase(int userId)
-        {
-            string? theme = new Omni.Data.OmniService().GetTheme(userId);
-            if (string.IsNullOrWhiteSpace(theme)) return;
 
-            Apply(theme, save: false);
-            _savedContent = null;
-        }
-        
         public static void Apply(string theme, bool save = true)
         {
             Color bg, text;
@@ -95,27 +122,22 @@ namespace Omni
             if (save) SavePending();
         }
 
-        // Writes the current theme to disk if it differs from what is saved there
+        // Saves the current theme to the current user's profile if it differs from what is saved there
         public static void SavePending()
         {
-            string content = SettingsContent();
-            if (content == _savedContent) return;
+            // Nothing has been loaded yet (no user picked), so there is no user to save for
+            if (_savedValue is null) return;
 
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-                File.WriteAllText(SettingsPath, content);
-                _savedContent = content;
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            string value = StoredValue();
+            if (value == _savedValue) return;
 
-            new Omni.Data.OmniService().SaveTheme(Omni.Data.OmniService.CurrentUserId, CurrentTheme);   // ← add this line
+            new OmniService().SaveTheme(OmniService.CurrentUserId, value);
+            _savedValue = value;
         }
 
-        private static string SettingsContent() =>
+        private static string StoredValue() =>
             LastCustom is { } custom
-                ? $"{CurrentTheme}\n{Custom(custom.Background, custom.Text)}"
+                ? $"{CurrentTheme}{CustomSeparator}{Custom(custom.Background, custom.Text)}"
                 : CurrentTheme;
 
         private static bool TryParseCustom(string theme, out Color bg, out Color text)

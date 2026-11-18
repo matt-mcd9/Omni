@@ -1,0 +1,160 @@
+<Window x:Class="Omni.UserSelectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Omni"
+        Width="680" MinHeight="340" SizeToContent="Height"
+        Background="{DynamicResource BgBrush}"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize">
+    <Window.Resources>
+
+        <!-- A square avatar with the name underneath; the avatar gets an outline on hover -->
+        <Style x:Key="UserTileStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="Margin" Value="10,0,10,16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <StackPanel Background="Transparent">
+                            <Border x:Name="Outline" Width="78" Height="78" CornerRadius="6"
+                                    BorderThickness="2" BorderBrush="Transparent" Padding="1">
+                                <ContentPresenter/>
+                            </Border>
+                            <TextBlock x:Name="Name" Text="{TemplateBinding Tag}" FontSize="12"
+                                       Margin="0,8,0,0" MaxWidth="84" TextTrimming="CharacterEllipsis"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Outline" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Main action (Create) -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="#3B82F6" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#2563EB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Secondary action (Back) -->
+        <Style x:Key="OutlineButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent"
+                                BorderBrush="{DynamicResource MutedTextBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Name box; replaces the default TextBox look, which ignores the theme -->
+        <Style x:Key="NameBoxStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Box" Background="{DynamicResource SidebarBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="10,7">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="#3B82F6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Thin accent line along the top, like a launcher dialog -->
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Rectangle Fill="#3B82F6"/>
+
+            <!-- Drag anywhere on the background to move the window -->
+            <Grid Grid.Row="1" Background="{DynamicResource BgBrush}" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+                <Button Content="&#xE8BB;" ToolTip="Close" Style="{StaticResource CloseCaptionButtonStyle}"
+                        HorizontalAlignment="Right" Click="Close_Click"/>
+
+                <StackPanel Margin="32,30,32,24">
+                    <TextBlock x:Name="TitleText" Text="Who's using Omni?" Foreground="{DynamicResource TextBrush}"
+                               FontSize="26" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="HintText" Foreground="{DynamicResource MutedTextBrush}" FontSize="14"
+                               HorizontalAlignment="Center" Margin="0,8,0,28"/>
+
+                    <!-- ===== Pick a user: avatars, then a plus to add one ===== -->
+                    <!-- Rows wrap and the window grows with them; only a very long list scrolls -->
+                    <ScrollViewer x:Name="PickView" MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                        <WrapPanel x:Name="UserTiles" HorizontalAlignment="Center"/>
+                    </ScrollViewer>
+
+                    <!-- ===== Add a user: asked only after the plus is clicked ===== -->
+                    <StackPanel x:Name="CreateView" Width="420" Visibility="Collapsed" Margin="0,8,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="NameBox" Style="{StaticResource NameBoxStyle}" MaxLength="20"
+                                     KeyDown="NameBox_KeyDown" TextChanged="NameBox_TextChanged"/>
+                            <Button x:Name="CreateButton" Grid.Column="1" Content="Create" Margin="10,0,0,0"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="Create_Click"/>
+                            <Button x:Name="BackButton" Grid.Column="2" Content="Back" Margin="8,0,0,0"
+                                    Style="{StaticResource OutlineButtonStyle}" Click="Back_Click"/>
+                        </Grid>
+                        <TextBlock x:Name="NameError" Foreground="#EF4444" FontSize="12" Margin="2,8,0,0"
+                                   TextWrapping="Wrap" Visibility="Collapsed"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

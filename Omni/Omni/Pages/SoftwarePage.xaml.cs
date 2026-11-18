@@ -30,10 +30,17 @@ namespace Omni.Pages
         public SoftwarePage()
         {
             InitializeComponent();
-            // adds file path tied to User 
+            ShowSavedApps();
+        }
+
+        // Lists every app saved for the current user, skipping files that were moved or deleted.
+        // hasExeFiles is rebuilt alongside so the list index still finds the path to launch.
+        private void ShowSavedApps() {
+            hasExeFiles.Clear();
+            listApplications.Items.Clear();
+
             foreach (string path in _service.GetSoftwarePaths(OmniService.CurrentUserId).Where(File.Exists)) {
                 hasExeFiles.Add(path);
-
                 listApplications.Items.Add(new SoftwareDisplayItem {
                     Name = Path.GetFileNameWithoutExtension(path),
                     Icon = getFileIcon(path)
@@ -51,7 +58,8 @@ namespace Omni.Pages
             };
 
             Process.Start(launchInfo);
-
+            // For Recently opened on Home
+            _service.RecordLaunchByPath(OmniService.CurrentUserId, "Software", hasExeFiles[indexSelectedApp]);
 
 
         }
@@ -81,6 +89,8 @@ namespace Omni.Pages
 
             }
             _service.SaveScannedSoftware(OmniService.CurrentUserId, hasExeFiles);
+            // Shows the new apps together with the ones saved before (and restores the list if the dialog was cancelled)
+            ShowSavedApps();
 
         }
 

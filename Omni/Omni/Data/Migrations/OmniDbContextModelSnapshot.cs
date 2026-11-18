@@ -78,10 +78,6 @@ namespace Omni.Data.Migrations
 
                     b.Property<DateTime>("LaunchedDate")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("MediaId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("MediaType")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -150,10 +146,6 @@ namespace Omni.Data.Migrations
 
                     b.Property<int>("ItemId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<int>("MediaId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("MediaType")
                         .IsRequired()
                         .HasColumnType("TEXT");

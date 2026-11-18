@@ -49,74 +49,24 @@
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
-        <!-- Drop-down rows in the user picker -->
-        <Style x:Key="UserItemStyle" TargetType="ComboBoxItem">
+        <!-- Outlined button with an icon + text (Switch user) -->
+        <Style x:Key="OutlineButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="10,7">
-                            <ContentPresenter/>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent"
+                                BorderBrush="{DynamicResource MutedTextBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SelectedBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsHighlighted" Value="True">
+                            <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- User picker; replaces the default ComboBox look, which ignores the theme -->
-        <Style x:Key="UserComboStyle" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="ItemContainerStyle" Value="{StaticResource UserItemStyle}"/>
-            <Setter Property="Width" Value="240"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Focusable="False" ClickMode="Press"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="Box" Background="{DynamicResource SidebarBrush}"
-                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                                CornerRadius="8" Padding="12,8">
-                                            <TextBlock Text="&#xE70D;" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                       Foreground="{DynamicResource MutedTextBrush}"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-
-                            <ContentPresenter Margin="13,9,32,9" IsHitTestVisible="False" VerticalAlignment="Center"
-                                              Content="{TemplateBinding SelectionBoxItem}"/>
-
-                            <Popup Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade"
-                                   VerticalOffset="4" IsOpen="{TemplateBinding IsDropDownOpen}">
-                                <Border Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                        Background="{DynamicResource SidebarBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                        CornerRadius="8" Padding="4">
-                                    <ItemsPresenter/>
-                                </Border>
-                            </Popup>
-                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -130,13 +80,24 @@
 
             <!-- ===== User ===== -->
             <TextBlock Text="User" Style="{StaticResource SectionHeaderStyle}"/>
-            <TextBlock Text="Switching users isn't available yet."
+            <TextBlock Text="Each user has their own library and theme."
                        Style="{StaticResource HintStyle}" Margin="0,0,0,14"/>
-            <ComboBox x:Name="UserPicker" Style="{StaticResource UserComboStyle}" Margin="0,0,0,28"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,28">
+                <TextBlock x:Name="CurrentUserText" Foreground="{DynamicResource TextBrush}" FontSize="14"
+                           VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Button Style="{StaticResource OutlineButtonStyle}" Click="SwitchUser_Click"
+                        ToolTip="Go back to the start page to pick or add a user">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE748;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Switch user" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
 
             <!-- ===== Appearance ===== -->
             <TextBlock Text="Appearance" Style="{StaticResource SectionHeaderStyle}"/>
-            <TextBlock Text="Choose the colours for the whole app.(Or create your own~)"
+            <TextBlock Text="Choose the colours for the whole app. (Or create your own~)"
                        Style="{StaticResource HintStyle}" Margin="0,0,0,14"/>
 
             <StackPanel Orientation="Horizontal">

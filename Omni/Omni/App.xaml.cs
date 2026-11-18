@@ -1,8 +1,7 @@
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Omni.Data;
-using System.Linq;
-using Omni.Models;
+using Omni.Pages;
 
 namespace Omni
 {
@@ -12,22 +11,49 @@ namespace Omni
         {
             base.OnStartup(e);
 
-            ThemeManager.LoadSaved();
+            using (var db = new OmniDbContext())
+                db.Database.Migrate();
 
-            using var db = new OmniDbContext();
-            db.Database.Migrate();
+            // Pick or create a user before the main window opens
+            ShowUserSelect();
+        }
 
-            if (!db.UserProfiles.Any())                                          
-            {                                                                    
-                db.UserProfiles.AddRange(                                        
-                    new UserProfile { UserId = 1, Username = "User 1" },         
-                    new UserProfile { UserId = 2, Username = "User 2" });        
-                db.SaveChanges();                                                
-            }                                                                    
+        // Shows the start-up page; picking or creating a user opens the main window as them.
+        // Closing it without choosing closes the app, as it is then the only window.
+        private void ShowUserSelect()
+        {
+            var userSelect = new UserSelectWindow();
+            userSelect.UserChosen += user =>
+            {
+                StartAs(user.UserId);
+                userSelect.Close();
+            };
+            userSelect.Show();
+        }
 
-            ThemeManager.LoadFromDatabase(OmniService.CurrentUserId);
-            
-            
+        private void StartAs(int userId)
+        {
+            OmniService.CurrentUserId = userId;
+
+            // The theme is stored per user, so it can only be loaded once we know who is using the app
+            ThemeManager.ImportOldSettingsFile(userId);
+            ThemeManager.Load(userId);
+
+            MainWindow = new MainWindow();
+            MainWindow.Show();
+        }
+
+        // Settings > Switch user: closes the main window and goes back to the start-up page
+        public void SwitchUser()
+        {
+            // Music keeps playing after leaving its page, but shouldn't carry on for the next user
+            MusicPage.StopAll();
+            ThemeManager.Reset();
+
+            // Opened before the main window closes, so the app always has a window and doesn't shut down
+            var main = MainWindow;
+            ShowUserSelect();
+            main?.Close();
         }
 
         protected override void OnExit(ExitEventArgs e)

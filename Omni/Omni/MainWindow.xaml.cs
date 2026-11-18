@@ -32,6 +32,9 @@ namespace Omni
                 nameof(NavSettings) => new SettingsPage(),
                 _ => PageHost.Content
             };
+
+            // The Music page has its own full controls
+            MiniPlayer?.Refresh(PageHost.Content is MusicPage);
         }
 
         // Lets pages switch page by sidebar name, e.g. NavigateTo("Music")
@@ -40,6 +43,9 @@ namespace Omni
             if (FindName("Nav" + page) is RadioButton rb)
                 rb.IsChecked = true;
         }
+
+        // The page shown now, if it is a T; e.g. after NavigateTo("Music"), CurrentPage<MusicPage>()
+        public T? CurrentPage<T>() where T : class => PageHost.Content as T;
 
         // ----- Custom title bar behaviour -----
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

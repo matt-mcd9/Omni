@@ -8,7 +8,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static Omni.Pages.SoftwarePage;
 
 namespace Omni.Pages
 {
@@ -28,11 +27,18 @@ namespace Omni.Pages
         public GamesPage()
         {
             InitializeComponent();
-            // adds file path tied to User 
-            foreach (string path in _service.GetGamePaths(OmniService.CurrentUserId).Where(File.Exists))
-            {
+            ShowSavedGames();
+        }
+
+        // Lists every game saved for the current user, skipping files that were moved or deleted.
+        // hasGameExe is rebuilt alongside so the list index still finds the path to launch.
+        private void ShowSavedGames() {
+            hasGameExe.Clear();
+            listGames.Items.Clear();
+
+            foreach (string path in _service.GetGamePaths(OmniService.CurrentUserId).Where(File.Exists)) {
                 hasGameExe.Add(path);
-                listGames.Items.Add(new SoftwareDisplayItem {
+                listGames.Items.Add(new GameDisplayItem {
                     Name = Path.GetFileNameWithoutExtension(path),
                     Icon = getFileIcon(path)
                 });
@@ -48,6 +54,8 @@ namespace Omni.Pages
             };
 
             Process.Start(launchInfo);
+            // For Recently opened on Home
+            _service.RecordLaunchByPath(OmniService.CurrentUserId, "Game", hasGameExe[indexSelectedGame]);
 
         }
 
@@ -78,7 +86,9 @@ namespace Omni.Pages
                 scanExeFiles(folderName);
             }
             _service.SaveScannedGames(OmniService.CurrentUserId, hasGameExe);
-        
+            // Shows the new games together with the ones saved before (and restores the list if the dialog was cancelled)
+            ShowSavedGames();
+
         
         }
 
